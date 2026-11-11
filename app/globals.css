@@ -57,6 +57,9 @@
   --font-display:  var(--font-display, Georgia, serif);
   --font-sans:     var(--font-sans, system-ui, sans-serif);
   --font-mono:     var(--font-mono, monospace);
+  --font-serif:    var(--font-serif, Georgia, serif);
+  /* Brand font — hanya untuk logo/icon Alif. */
+  --font-brand:    var(--font-brand, Georgia, serif);
 
   /* Fluid type scale — clamp(min, preferred, max) */
   --text-xs:    0.75rem;       /* 12px */
@@ -813,8 +816,16 @@
   font-family: var(--font-display);
 }
 
+@utility font-brand {
+  font-family: var(--font-brand);
+}
+
 @utility font-sans {
   font-family: var(--font-sans);
+}
+
+@utility font-serif {
+  font-family: var(--font-serif);
 }
 
 @utility font-mono {

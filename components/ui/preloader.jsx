@@ -66,8 +66,8 @@ export default function Preloader({ onComplete }) {
       {/* Logo mark */}
       <div ref={textRef} className="mb-8 opacity-0">
         <span
-          className="font-display font-bold tracking-tight"
-          style={{ fontSize: "2rem", color: "var(--color-ink)" }}
+          className="font-brand font-bold tracking-tight"
+          style={{ fontSize: "2rem", color: "var(--color-ink)", fontFamily: "var(--font-brand)" }}
         >
           Alif<span style={{ color: "var(--color-mint)" }}>.</span>
         </span>

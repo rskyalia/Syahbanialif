@@ -87,8 +87,8 @@ export default function Header() {
           <a
             href="#home"
             onClick={closeMenu}
-            className="font-display font-bold tracking-tight text-xl transition-colors duration-300 hover:text-[var(--color-mint)] flex items-center gap-0.5"
-            style={{ color: "var(--color-ink)" }}
+            className="font-brand font-bold tracking-tight text-xl transition-colors duration-300 hover:text-[var(--color-mint)] flex items-center gap-0.5"
+            style={{ color: "var(--color-ink)", fontFamily: "var(--font-brand)" }}
             aria-label="Muhammad Alif Sya'bani — back to top"
           >
             Alif<span style={{ color: "var(--color-mint)" }} aria-hidden="true">.</span>

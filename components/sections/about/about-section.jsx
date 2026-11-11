@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { gsap, useGSAP } from "@/animations/gsap-config";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MapPin, Download } from "lucide-react";
@@ -110,27 +111,27 @@ export default function AboutSection() {
                 {/* Inner div moves with parallax */}
                 <div
                   ref={imageInner}
-                  className="absolute inset-0 scale-[1.15] origin-center"
+                  className="absolute inset-0 scale-[1.12] origin-center"
                   style={{ willChange: "transform" }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-mint)]/20 via-transparent to-[var(--color-sky)]/20" />
-                  {/* Profile image — replace with <Image> when photo is available */}
+                  {/* Foto profil nyata */}
+                  <Image
+                    src="/images/about/fotodiri.jpg"
+                    alt={`Portrait photo of ${personalInfo.name}`}
+                    fill
+                    sizes="(max-width: 1024px) 90vw, 40vw"
+                    className="object-cover object-center"
+                    priority
+                  />
+                  {/* Subtle overlay untuk menjaga gradien di atas foto */}
                   <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    role="img"
-                    aria-label={`Profile photo of ${personalInfo.name}`}
-                  >
-                    <div className="text-center space-y-3">
-                      <div className="w-24 h-24 rounded-full bg-[var(--color-mint)]/20 border-2 border-[var(--color-mint)]/40 mx-auto flex items-center justify-center">
-                        <span className="text-4xl font-display font-bold text-[var(--color-mint)]" aria-hidden="true">
-                          {personalInfo.name.charAt(0)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-[var(--color-ink-subtle)] font-mono" aria-hidden="true">
-                        Profile Image
-                      </p>
-                    </div>
-                  </div>
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(to top, rgba(10,18,24,0.35) 0%, transparent 60%)",
+                    }}
+                    aria-hidden="true"
+                  />
                 </div>
 
                 {/* Corner accents */}

@@ -89,12 +89,12 @@ export default function Footer() {
         {/* Top row */}
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
 
-          {/* Brand */}
+          {/* Brand — logo memakai Bergand */}
           <div className="footer-col">
             <Link
               href="#home"
-              className="font-display text-2xl font-bold transition-colors duration-300"
-              style={{ color: "var(--color-ink)" }}
+              className="font-brand text-2xl font-bold transition-colors duration-300"
+              style={{ color: "var(--color-ink)", fontFamily: "var(--font-brand)" }}
               onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-mint)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-ink)"; }}
             >

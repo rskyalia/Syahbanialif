@@ -1,61 +1,102 @@
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import localFont    from "next/font/local";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 /**
- * Display font — Space Grotesk (placeholder until Bergant is available).
- *
- * HOW TO ADD BERGANT LATER:
- *  1. Place woff2 files in public/fonts/bergant/
- *  2. Import `localFont` from "next/font/local"
- *  3. Replace this export with the localFont config (example in comments below)
+ * Brand font — Bergand (self-hosted).
+ * Hanya dipakai untuk logo/icon "Alif." di navbar dan footer.
+ * Tersedia via CSS var(--font-brand) dan class `font-brand`.
  */
-export const bergant = Space_Grotesk({
-  subsets:  ["latin"],
-  display:  "swap",
-  variable: "--font-display",
-  weight:   ["400", "500", "600", "700"],
-  preload:  true,
-  // Restrict to only glyphs needed for headings to reduce bundle size
-  adjustFontFallback: true,
-});
-
-/*
-// ── Uncomment when Bergant files are ready ──
-import localFont from "next/font/local";
 export const bergant = localFont({
   src: [
-    { path: "../public/fonts/bergant/Bergant-Regular.woff2", weight: "400", style: "normal" },
-    { path: "../public/fonts/bergant/Bergant-Medium.woff2",  weight: "500", style: "normal" },
-    { path: "../public/fonts/bergant/Bergant-Bold.woff2",    weight: "700", style: "normal" },
+    {
+      path:   "../public/fonts/bergant/Bergand.otf",
+      weight: "400",
+      style:  "normal",
+    },
   ],
-  variable: "--font-display",
+  variable: "--font-brand",   // ← bukan --font-display lagi
+  display:  "swap",
+  preload:  true,             // preload karena muncul di hero/navbar
+  fallback: ["Georgia", "serif"],
+});
+
+/**
+ * Display / heading font — Cormorant Garamond (self-hosted).
+ * Dipakai untuk SEMUA heading: H1–H6, hero title, section title,
+ * card title, nama, dll. via var(--font-display) / class `font-display`.
+ */
+export const cormorant = localFont({
+  src: [
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-Light.ttf",
+      weight: "300",
+      style:  "normal",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-LightItalic.ttf",
+      weight: "300",
+      style:  "italic",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-Regular.ttf",
+      weight: "400",
+      style:  "normal",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-Italic.ttf",
+      weight: "400",
+      style:  "italic",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-Medium.ttf",
+      weight: "500",
+      style:  "normal",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-MediumItalic.ttf",
+      weight: "500",
+      style:  "italic",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-SemiBold.ttf",
+      weight: "600",
+      style:  "normal",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-Bold.ttf",
+      weight: "700",
+      style:  "normal",
+    },
+    {
+      path:   "../public/fonts/cormorant-garamond/CormorantGaramond-BoldItalic.ttf",
+      weight: "700",
+      style:  "italic",
+    },
+  ],
+  variable: "--font-display",  // ← sekarang Cormorant Garamond yang jadi display font
   display:  "swap",
   preload:  true,
-  fallback: ["Space Grotesk", "system-ui", "sans-serif"],
+  fallback: ["Georgia", "Times New Roman", "serif"],
 });
-*/
 
 /**
- * Body font — Inter.
- * Only latin subset; weights: 400 (regular) & 600 (semibold) cover 99% of UI.
+ * Body font — Inter (self-cached oleh Next.js dari Google Fonts).
+ * Dipakai untuk semua body text, UI copy, button, label.
  */
 export const inter = Inter({
-  subsets:            ["latin"],
-  display:            "swap",
-  variable:           "--font-sans",
-  preload:            true,
-  weight:             ["400", "500", "600", "700"],
-  adjustFontFallback: true,
+  subsets:  ["latin"],
+  display:  "swap",
+  variable: "--font-sans",
+  weight:   ["400", "500", "600", "700"],
 });
 
 /**
- * Mono font — JetBrains Mono.
- * preload: false — only loaded when first needed (labels, counters).
- * Subset to latin only, 2 weights cover all label use cases.
+ * Mono font — JetBrains Mono (self-cached oleh Next.js).
+ * Dipakai untuk label teknis, counter, badge kode.
  */
 export const jetbrainsMono = JetBrains_Mono({
   subsets:  ["latin"],
   display:  "swap",
   variable: "--font-mono",
   weight:   ["400", "500"],
-  preload:  false, // non-critical — lazy load
 });

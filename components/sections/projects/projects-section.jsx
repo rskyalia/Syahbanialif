@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import { gsap, useGSAP } from "@/animations/gsap-config";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ExternalLink, Github, ArrowRight } from "lucide-react";
@@ -26,22 +27,20 @@ export default function ProjectsSection() {
       ? projects
       : projects.filter((p) => p.category === activeCategory);
 
-  /* ── Category switch: fade-out → update → fade-in ── */
+  /* ── Category switch: fade-out → update state → fade-in ── */
   const handleCategoryChange = useCallback(
     (id) => {
       if (id === activeCategory || isTransitioning) return;
       const cards = gridRef.current?.querySelectorAll(".project-card");
-      if (!cards?.length) {
-        setActiveCategory(id);
-        return;
-      }
+      if (!cards?.length) { setActiveCategory(id); return; }
+
       setIsTransitioning(true);
       gsap.to(cards, {
-        opacity: 0,
-        y:       20,
+        opacity:  0,
+        y:        20,
         duration: 0.3,
         stagger:  0.03,
-        ease:    "power2.in",
+        ease:     "power2.in",
         onComplete: () => {
           setActiveCategory(id);
           setIsTransitioning(false);
@@ -51,7 +50,7 @@ export default function ProjectsSection() {
     [activeCategory, isTransitioning]
   );
 
-  /* ── Animate cards when filteredProjects changes ── */
+  /* ── Card animations ── */
   useGSAP(
     () => {
       const grid = gridRef.current;
@@ -62,17 +61,17 @@ export default function ProjectsSection() {
 
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      /* Entry animation for all visible cards */
+      /* Entry stagger */
       gsap.fromTo(
         cards,
         { opacity: 0, y: 60, scale: 0.93 },
         {
-          opacity:  1,
-          y:        0,
-          scale:    1,
-          duration: 0.75,
-          stagger:  { amount: 0.4 },
-          ease:     "power3.out",
+          opacity:    1,
+          y:          0,
+          scale:      1,
+          duration:   0.75,
+          stagger:    { amount: 0.4 },
+          ease:       "power3.out",
           clearProps: "transform",
           scrollTrigger: {
             trigger:       grid,
@@ -85,19 +84,18 @@ export default function ProjectsSection() {
 
       if (reduced) return;
 
-      /* ── Per-card hover: image zoom + overlay ── */
+      /* Hover: image zoom + overlay */
       cards.forEach((card) => {
-        const img     = card.querySelector(".proj-img");
+        const imgWrap = card.querySelector(".proj-img-wrap");
         const overlay = card.querySelector(".proj-overlay");
         const title   = card.querySelector(".proj-title");
-
-        if (!img) return;
+        if (!imgWrap) return;
 
         const tl = gsap.timeline({ paused: true });
         tl
-          .to(img,     { scale: 1.08, duration: 0.55, ease: "power2.out" }, 0)
+          .to(imgWrap, { scale: 1.07, duration: 0.55, ease: "power2.out" }, 0)
           .to(overlay, { opacity: 1,  duration: 0.4,  ease: "power2.out" }, 0)
-          .to(title,   { color: "var(--color-mint)", duration: 0.3 }, 0);
+          .to(title,   { color: "var(--color-mint)", duration: 0.25 }, 0);
 
         card.addEventListener("mouseenter", () => tl.play());
         card.addEventListener("mouseleave", () => tl.reverse());
@@ -126,7 +124,7 @@ export default function ProjectsSection() {
           </p>
         </div>
 
-        {/* Category filters */}
+        {/* ── Category filters ── */}
         <div
           className="flex flex-wrap justify-center gap-3 mb-12 md:mb-16"
           role="group"
@@ -143,22 +141,19 @@ export default function ProjectsSection() {
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.id)}
                 disabled={isTransitioning}
-                aria-pressed={activeCategory === cat.id}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                aria-pressed={isActive}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                   isActive
                     ? "text-[var(--color-canvas)] scale-105"
                     : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] border border-white/5"
                 } ${isTransitioning ? "opacity-50 cursor-wait" : ""}`}
                 style={{
-                  background: isActive
-                    ? "var(--color-mint)"
-                    : "rgba(24,52,58,0.4)",
-                  boxShadow: isActive
-                    ? "0 0 20px rgba(184,216,199,0.25)"
-                    : "none",
+                  background: isActive ? "var(--color-mint)" : "rgba(24,52,58,0.4)",
+                  boxShadow:  isActive ? "0 0 20px rgba(184,216,199,0.25)" : "none",
+                  minHeight:  "44px",
                 }}
               >
-                <span className="relative z-10 flex items-center gap-2">
+                <span className="flex items-center gap-2">
                   {cat.label}
                   <span className={`text-xs ${isActive ? "opacity-80" : "opacity-40"}`}>
                     ({count})
@@ -169,7 +164,7 @@ export default function ProjectsSection() {
           })}
         </div>
 
-        {/* Grid */}
+        {/* ── Project grid ── */}
         <div
           ref={gridRef}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
@@ -183,68 +178,95 @@ export default function ProjectsSection() {
             >
               <Card
                 variant="glass"
-                className="h-full overflow-hidden"
+                className="h-full overflow-hidden flex flex-col"
                 style={{ willChange: "transform" }}
               >
-                {/* Image area */}
-                <div className="project-image-wrapper relative aspect-[16/10] overflow-hidden bg-[var(--color-canvas-mid)]">
-                  {/* Placeholder gradient */}
+                {/* ── Image area ── */}
+                <div className="relative aspect-[16/10] overflow-hidden bg-[var(--color-canvas-mid)] flex-shrink-0">
+
+                  {/* Image (zoom target) */}
                   <div
-                    className="proj-img absolute inset-0 origin-center"
+                    className="proj-img-wrap absolute inset-0 origin-center"
+                    style={{ willChange: "transform" }}
+                  >
+                    <Image
+                      src={project.image}
+                      alt={`Screenshot of ${project.title}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover object-top"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Gradient overlay base — always visible for legibility */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
                     style={{
                       background:
-                        "linear-gradient(135deg,rgba(184,216,199,0.18) 0%,rgba(168,217,237,0.1) 50%,rgba(184,216,199,0.08) 100%)",
-                      willChange: "transform",
+                        "linear-gradient(to top, rgba(10,18,24,0.6) 0%, rgba(10,18,24,0.1) 50%, transparent 100%)",
                     }}
+                    aria-hidden="true"
                   />
 
-                  {/* Letter placeholder */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center">
-                      <div className="w-20 h-20 mx-auto rounded-2xl bg-[var(--color-mint)]/10 border border-[var(--color-mint)]/20 flex items-center justify-center mb-3">
-                        <span className="text-3xl font-display font-bold text-[var(--color-mint)]">
-                          {project.title.charAt(0)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Hover overlay with links */}
+                  {/* Hover overlay — links appear on hover */}
                   <div
-                    className="proj-overlay absolute inset-0 flex items-end justify-center pb-6 opacity-0"
+                    className="proj-overlay absolute inset-0 flex items-end justify-center pb-5 opacity-0 pointer-events-none"
                     style={{
                       background:
-                        "linear-gradient(to top, rgba(10,18,24,0.88) 0%, rgba(10,18,24,0.5) 50%, transparent 100%)",
-                      pointerEvents: "none",
+                        "linear-gradient(to top, rgba(10,18,24,0.92) 0%, rgba(10,18,24,0.55) 55%, transparent 100%)",
                     }}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pointer-events-auto">
                       {project.liveUrl && (
-                        <div className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 text-[var(--color-canvas)]"
-                          style={{ background: "var(--color-mint)" }}>
-                          <ExternalLink className="w-4 h-4" />
+                        <a
+                          href={project.liveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Visit ${project.title} website`}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity duration-200 hover:opacity-90"
+                          style={{ background: "var(--color-mint)", color: "var(--color-canvas)" }}
+                        >
+                          <ExternalLink className="w-4 h-4" aria-hidden="true" />
                           View Live
-                        </div>
+                        </a>
                       )}
                       {project.repoUrl && (
-                        <div className="px-4 py-2 rounded-lg bg-[var(--color-canvas-mid)] text-[var(--color-ink)] text-sm font-medium flex items-center gap-2">
-                          <Github className="w-4 h-4" />
-                          Source
-                        </div>
+                        <a
+                          href={project.repoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`View ${project.title} source code on GitHub`}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-opacity duration-200 hover:opacity-90"
+                          style={{
+                            background: "rgba(255,255,255,0.12)",
+                            color:      "var(--color-ink)",
+                            border:     "1px solid rgba(255,255,255,0.15)",
+                            backdropFilter: "blur(8px)",
+                          }}
+                        >
+                          <Github className="w-4 h-4" aria-hidden="true" />
+                          GitHub
+                        </a>
                       )}
                     </div>
                   </div>
 
-                  {/* Badges */}
+                  {/* Featured badge */}
                   {project.featured && (
-                    <div className="absolute top-4 left-4 z-10">
-                      <Badge className="bg-[var(--color-mint)]/90 text-[var(--color-canvas)] backdrop-blur-sm">
+                    <div className="absolute top-3 left-3 z-10">
+                      <Badge
+                        className="backdrop-blur-sm text-[var(--color-canvas)]"
+                        style={{ background: "rgba(184,216,199,0.9)" }}
+                      >
                         Featured
                       </Badge>
                     </div>
                   )}
+
+                  {/* Year badge */}
                   {project.year && (
-                    <div className="absolute top-4 right-4 z-10">
+                    <div className="absolute top-3 right-3 z-10">
                       <Badge variant="outline" className="backdrop-blur-sm">
                         {project.year}
                       </Badge>
@@ -252,38 +274,42 @@ export default function ProjectsSection() {
                   )}
                 </div>
 
-                {/* Details */}
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center gap-2">
+                {/* ── Card body ── */}
+                <div className="p-6 flex flex-col flex-1 gap-3">
+
+                  {/* Category + role */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-mono text-[var(--color-mint)] uppercase tracking-wider">
                       {projectCategories.find((c) => c.id === project.category)?.label ?? project.category}
                     </span>
                     {project.role && (
                       <>
-                        <span className="text-[var(--color-ink-subtle)]">•</span>
+                        <span className="text-[var(--color-ink-subtle)]" aria-hidden="true">•</span>
                         <span className="text-xs text-[var(--color-ink-subtle)]">{project.role}</span>
                       </>
                     )}
                   </div>
 
-                  <h3 className="proj-title text-xl md:text-2xl font-display font-bold text-[var(--color-ink)] transition-colors duration-300">
+                  {/* Title */}
+                  <h3 className="proj-title text-xl md:text-2xl font-display font-bold text-[var(--color-ink)] transition-colors duration-300 leading-snug">
                     {project.title}
                   </h3>
 
-                  <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                  {/* Description */}
+                  <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed flex-1">
                     {project.description}
                   </p>
 
-                  {/* Tags */}
+                  {/* Tech tags */}
                   <div className="flex flex-wrap gap-2">
                     {project.tags.map((tag, ti) => (
                       <span
                         key={ti}
                         className="text-xs px-3 py-1 rounded-full border"
                         style={{
-                          background: "rgba(184,216,199,0.08)",
-                          color:      "var(--color-mint)",
-                          borderColor:"rgba(184,216,199,0.2)",
+                          background:  "rgba(184,216,199,0.08)",
+                          color:       "var(--color-mint)",
+                          borderColor: "rgba(184,216,199,0.2)",
                         }}
                       >
                         {tag}
@@ -291,31 +317,67 @@ export default function ProjectsSection() {
                     ))}
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-3 pt-2">
+                  {/* ── Action buttons ── */}
+                  <div className="flex flex-wrap gap-3 pt-1">
                     {project.liveUrl ? (
                       <Button variant="primary" size="sm" asChild>
-                        <a href={project.liveUrl} target="_blank" rel="noopener noreferrer"
-                           className="inline-flex items-center gap-2">
-                          View Project
-                          <ExternalLink className="w-4 h-4" />
+                        <a
+                          href={project.liveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2"
+                          aria-label={`Visit ${project.title} website`}
+                        >
+                          <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                          Visit Website
                         </a>
                       </Button>
                     ) : (
-                      <Button variant="primary" size="sm" disabled className="opacity-50 cursor-not-allowed">
+                      <span
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium cursor-not-allowed"
+                        style={{
+                          background: "rgba(184,216,199,0.1)",
+                          color:      "var(--color-ink-subtle)",
+                          border:     "1px solid rgba(184,216,199,0.15)",
+                          minHeight:  "44px",
+                        }}
+                        aria-label="Website not yet available"
+                      >
+                        <ExternalLink className="w-4 h-4" aria-hidden="true" />
                         Coming Soon
-                      </Button>
+                      </span>
                     )}
-                    {project.repoUrl && (
+
+                    {project.repoUrl ? (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={project.repoUrl} target="_blank" rel="noopener noreferrer"
-                           className="inline-flex items-center gap-2">
-                          <Github className="w-4 h-4" />
-                          Source Code
+                        <a
+                          href={project.repoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2"
+                          aria-label={`View ${project.title} on GitHub`}
+                        >
+                          <Github className="w-4 h-4" aria-hidden="true" />
+                          GitHub
                         </a>
                       </Button>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium cursor-not-allowed"
+                        style={{
+                          background: "transparent",
+                          color:      "var(--color-ink-subtle)",
+                          border:     "1px solid rgba(255,255,255,0.08)",
+                          minHeight:  "44px",
+                        }}
+                        aria-label="Repository not public"
+                      >
+                        <Github className="w-4 h-4" aria-hidden="true" />
+                        Private
+                      </span>
                     )}
                   </div>
+
                 </div>
               </Card>
             </article>
@@ -326,22 +388,12 @@ export default function ProjectsSection() {
         {filteredProjects.length === 0 && (
           <div className="text-center py-16">
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-[var(--color-mint)]/10 border border-[var(--color-mint)]/20 flex items-center justify-center">
-              <span className="text-3xl">📂</span>
+              <span className="text-3xl" aria-hidden="true">📂</span>
             </div>
             <h3 className="text-xl font-display font-bold text-[var(--color-ink)] mb-2">
               No projects found
             </h3>
             <p className="text-[var(--color-ink-muted)]">Try selecting a different category</p>
-          </div>
-        )}
-
-        {/* CTA */}
-        {filteredProjects.length > 0 && (
-          <div className="text-center mt-12">
-            <Button variant="ghost" size="lg" className="group inline-flex items-center gap-2">
-              View All Projects
-              <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-            </Button>
           </div>
         )}
 

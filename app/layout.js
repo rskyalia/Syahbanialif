@@ -1,5 +1,5 @@
 import "./globals.css";
-import { inter, bergant, jetbrainsMono } from "./fonts";
+import { inter, bergant, cormorant, jetbrainsMono } from "./fonts";
 import { siteConfig } from "@/data/site-config";
 import SmoothScroll    from "@/components/providers/smooth-scroll";
 import ScrollProgress  from "@/components/ui/scroll-progress";
@@ -132,7 +132,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="id"
-      className={`${inter.variable} ${bergant.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${bergant.variable} ${cormorant.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>
