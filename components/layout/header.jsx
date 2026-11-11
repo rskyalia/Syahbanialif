@@ -145,7 +145,7 @@ export default function Header() {
         aria-modal="true"
         aria-label="Navigation menu"
         /* Conditionally inert to prevent focus trapping when closed */
-        inert={!isMobileOpen ? "" : undefined}
+        inert={!isMobileOpen ? true : undefined}
         className={cn(
           "fixed inset-0 z-40 md:hidden flex flex-col",
           "transition-all duration-500",
