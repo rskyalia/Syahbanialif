@@ -3,7 +3,10 @@
 import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/animations/gsap-config";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Github, Linkedin, Instagram, Mail, ArrowRight, Send, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Github, Linkedin, Instagram, Mail,
+  ArrowRight, Send, CheckCircle, AlertCircle, Loader2,
+} from "lucide-react";
 import { siteConfig } from "@/data/site-config";
 import { SectionWrapper } from "@/components/ui";
 
@@ -16,44 +19,28 @@ const socialLinks = [
   { label: "Email",     href: `mailto:${siteConfig.social.email}`, Icon: Mail      },
 ];
 
+/* ── Shared input style ── */
 const inputBase = {
-  background:  "rgba(255,255,255,0.05)",
-  border:      "1px solid rgba(255,255,255,0.1)",
-  color:       "var(--color-ink)",
-  outline:     "none",
+  background:   "rgba(255,255,255,0.05)",
+  border:       "1px solid rgba(255,255,255,0.1)",
+  color:        "var(--color-ink)",
+  outline:      "none",
   borderRadius: "0.75rem",
-  padding:     "0.75rem 1rem",
-  fontSize:    "0.875rem",
-  width:       "100%",
-  minHeight:   "48px",
-  fontFamily:  "var(--font-sans)",
-  transition:  "border-color 0.2s ease",
+  padding:      "0.75rem 1rem",
+  fontSize:     "0.875rem",
+  width:        "100%",
+  minHeight:    "48px",
+  fontFamily:   "var(--font-sans)",
+  transition:   "border-color 0.2s ease",
 };
 
-function InputField({ id, label, required, error, children }) {
+function FieldError({ msg }) {
+  if (!msg) return null;
   return (
-    <div className="form-field flex flex-col gap-1.5">
-      <label
-        htmlFor={id}
-        className="text-sm font-medium"
-        style={{ color: "var(--color-ink-muted)" }}
-      >
-        {label}
-        {required && (
-          <>
-            <span aria-hidden="true" style={{ color: "var(--color-mint)", marginLeft: "0.25rem" }}>*</span>
-            <span className="sr-only"> (required)</span>
-          </>
-        )}
-      </label>
-      {children}
-      {error && (
-        <p className="text-xs flex items-center gap-1" style={{ color: "#f87171" }} role="alert">
-          <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-          {error}
-        </p>
-      )}
-    </div>
+    <p className="text-xs flex items-center gap-1 mt-1" style={{ color: "#f87171" }} role="alert">
+      <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+      {msg}
+    </p>
   );
 }
 
@@ -65,53 +52,84 @@ export default function ContactSection() {
   const socialRef  = useRef(null);
   const formRef    = useRef(null);
 
-  const [fields,  setFields]  = useState({ name: "", email: "", message: "" });
+  const emptyFields = { name: "", email: "", message: "" };
+  const [fields,  setFields]  = useState(emptyFields);
   const [errors,  setErrors]  = useState({});
-  const [status,  setStatus]  = useState("idle"); // idle | sending | success
+  const [status,  setStatus]  = useState("idle"); // idle | sending | success | error
+  const [apiError, setApiError] = useState("");
 
-  /* ── Simple client-side validation ── */
+  /* ── Client-side validation ── */
   function validate() {
     const e = {};
     if (!fields.name.trim() || fields.name.trim().length < 2)
-      e.name = "Name must be at least 2 characters.";
+      e.name = "Nama minimal 2 karakter.";
     if (!fields.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email))
-      e.email = "Please enter a valid email address.";
+      e.email = "Alamat email tidak valid.";
     if (!fields.message.trim() || fields.message.trim().length < 10)
-      e.message = "Message must be at least 10 characters.";
+      e.message = "Pesan minimal 10 karakter.";
     return e;
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFields((p) => ({ ...p, [name]: value }));
-    // Clear error on change
     if (errors[name]) setErrors((p) => ({ ...p, [name]: undefined }));
   };
 
-  const handleSubmit = (e) => {
+  /* ── Submit via API route ── */
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      // Focus first error field
-      const firstKey = Object.keys(errs)[0];
+
+    const clientErrors = validate();
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors);
+      const firstKey = Object.keys(clientErrors)[0];
       document.getElementById(`contact-${firstKey}`)?.focus();
       return;
     }
 
     setStatus("sending");
     setErrors({});
+    setApiError("");
 
-    const subject = encodeURIComponent(`Portfolio Contact from ${fields.name}`);
-    const body    = encodeURIComponent(
-      `Name: ${fields.name}\nEmail: ${fields.email}\n\nMessage:\n${fields.message}`
-    );
-    window.location.href = `mailto:${siteConfig.social.email}?subject=${subject}&body=${body}`;
+    try {
+      const res = await fetch("/api/contact", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          name:    fields.name.trim(),
+          email:   fields.email.trim(),
+          message: fields.message.trim(),
+          website: "", // honeypot — intentionally empty
+        }),
+      });
 
-    setTimeout(() => {
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Server-side validation errors
+        if (data.errors) {
+          setErrors(data.errors);
+          setStatus("idle");
+          return;
+        }
+        throw new Error(data.error ?? "Gagal mengirim pesan.");
+      }
+
+      if (data.fallback && data.mailto) {
+        // No email provider configured — open mailto client
+        const { subject, body } = data.mailto;
+        window.location.href = `mailto:${siteConfig.social.email}?subject=${subject}&body=${body}`;
+      }
+
       setStatus("success");
-      setFields({ name: "", email: "", message: "" });
-    }, 600);
+      setFields(emptyFields);
+
+    } catch (err) {
+      console.error("[Contact]", err);
+      setApiError(err.message ?? "Terjadi kesalahan. Silakan coba lagi.");
+      setStatus("error");
+    }
   };
 
   /* ── Entrance animations ── */
@@ -152,27 +170,34 @@ export default function ContactSection() {
           {
             opacity: 1, y: 0, duration: 0.55, stagger: 0.1, ease: "power3.out",
             scrollTrigger: {
-              trigger: formRef.current, start: "top 85%", toggleActions: "play none none reverse",
+              trigger:       formRef.current,
+              start:         "top 85%",
+              toggleActions: "play none none reverse",
             },
           }
         );
       }
 
       const icons = socialRef.current?.querySelectorAll(".social-icon") ?? [];
-      gsap.fromTo(icons,
+      gsap.fromTo(
+        icons,
         { opacity: 0, y: reduced ? 0 : 25, scale: reduced ? 1 : 0.7 },
         {
           opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.07, ease: "back.out(1.7)",
-          scrollTrigger: { trigger: socialRef.current, start: "top 90%", toggleActions: "play none none reverse" },
+          scrollTrigger: {
+            trigger:       socialRef.current,
+            start:         "top 90%",
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
       if (!reduced) {
         icons.forEach((icon) => {
-          const tl = gsap.timeline({ paused: true });
-          tl.to(icon, { scale: 1.18, y: -5, duration: 0.3, ease: "back.out(2)" });
-          icon.addEventListener("mouseenter", () => tl.play());
-          icon.addEventListener("mouseleave", () => tl.reverse());
+          const hoverTl = gsap.timeline({ paused: true });
+          hoverTl.to(icon, { scale: 1.18, y: -5, duration: 0.3, ease: "back.out(2)" });
+          icon.addEventListener("mouseenter", () => hoverTl.play());
+          icon.addEventListener("mouseleave", () => hoverTl.reverse());
         });
       }
     },
@@ -186,7 +211,8 @@ export default function ContactSection() {
 
           {/* ── Heading ── */}
           <div className="text-center mb-14">
-            <p className="font-mono text-xs uppercase tracking-widest mb-6" style={{ color: "var(--color-mint)" }}>
+            <p className="font-mono text-xs uppercase tracking-widest mb-6"
+               style={{ color: "var(--color-mint)" }}>
               Get in Touch
             </p>
             <h2
@@ -198,8 +224,10 @@ export default function ContactSection() {
               <span className="contact-line block">Let&apos;s Build</span>
               <span className="contact-line block">
                 <span style={{
-                  background: "linear-gradient(120deg,#E8F5EE 0%,var(--color-mint) 40%,var(--color-sky) 100%)",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+                  background:           "linear-gradient(120deg,#E8F5EE 0%,var(--color-mint) 40%,var(--color-sky) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor:  "transparent",
+                  backgroundClip:      "text",
                 }}>Something Great.</span>
               </span>
             </h2>
@@ -208,24 +236,40 @@ export default function ContactSection() {
               className="text-lg leading-relaxed max-w-xl mx-auto"
               style={{ color: "var(--color-ink-muted)" }}
             >
-              Available for freelance projects, collaborations, and exciting new opportunities.
-              Let&apos;s create something meaningful together.
+              Tersedia untuk proyek freelance, kolaborasi, dan peluang menarik.
+              Mari wujudkan sesuatu yang bermakna bersama.
             </p>
           </div>
 
-          {/* ── Email CTA ── */}
+          {/* ── Direct email CTA ── */}
           <div ref={ctaRef} className="text-center mb-14">
             <a
               href={`mailto:${siteConfig.social.email}`}
-              aria-label={`Email ${siteConfig.social.email}`}
+              aria-label={`Kirim email ke ${siteConfig.social.email}`}
               className="group inline-flex items-center gap-3 px-9 py-4 rounded-full font-semibold text-base transition-all duration-300"
-              style={{ background: "var(--color-mint)", color: "var(--color-canvas)", boxShadow: "0 0 32px rgba(184,216,199,0.25)", minHeight: "52px" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-mint-light)"; e.currentTarget.style.boxShadow = "0 0 48px rgba(184,216,199,0.4)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-mint)"; e.currentTarget.style.boxShadow = "0 0 32px rgba(184,216,199,0.25)"; e.currentTarget.style.transform = "translateY(0)"; }}
+              style={{
+                background: "var(--color-mint)",
+                color:      "var(--color-canvas)",
+                boxShadow:  "0 0 32px rgba(184,216,199,0.25)",
+                minHeight:  "52px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background  = "var(--color-mint-light)";
+                e.currentTarget.style.boxShadow   = "0 0 48px rgba(184,216,199,0.4)";
+                e.currentTarget.style.transform   = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background  = "var(--color-mint)";
+                e.currentTarget.style.boxShadow   = "0 0 32px rgba(184,216,199,0.25)";
+                e.currentTarget.style.transform   = "translateY(0)";
+              }}
             >
               <Send className="w-5 h-5" aria-hidden="true" />
-              Send Me an Email
-              <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+              {siteConfig.social.email}
+              <ArrowRight
+                className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
+                aria-hidden="true"
+              />
             </a>
           </div>
 
@@ -240,33 +284,78 @@ export default function ContactSection() {
             }}
           >
             <h3 className="text-xl font-display font-bold text-[var(--color-ink)] mb-6">
-              Or send a message directly
+              Atau kirim pesan langsung
             </h3>
 
             {status === "success" ? (
               <div
                 className="flex flex-col items-center justify-center py-12 gap-4 text-center"
-                role="status" aria-live="polite"
+                role="status"
+                aria-live="polite"
               >
-                <CheckCircle className="w-14 h-14" style={{ color: "var(--color-mint)" }} aria-hidden="true" />
+                <CheckCircle
+                  className="w-14 h-14"
+                  style={{ color: "var(--color-mint)" }}
+                  aria-hidden="true"
+                />
                 <p className="text-lg font-medium" style={{ color: "var(--color-ink)" }}>
-                  Your email client is ready!
+                  Pesan terkirim!
                 </p>
                 <p className="text-sm" style={{ color: "var(--color-ink-muted)" }}>
-                  The message has been pre-filled. Just hit send in your email client.
+                  Terima kasih telah menghubungi. Saya akan membalas secepatnya.
                 </p>
                 <button
                   onClick={() => setStatus("idle")}
                   className="mt-2 text-sm underline"
                   style={{ color: "var(--color-mint)" }}
                 >
-                  Send another message
+                  Kirim pesan lain
                 </button>
               </div>
             ) : (
-              <form ref={formRef} onSubmit={handleSubmit} noValidate aria-label="Contact form">
+              <form
+                ref={formRef}
+                onSubmit={handleSubmit}
+                noValidate
+                aria-label="Contact form"
+              >
+                {/* Global API error */}
+                {status === "error" && apiError && (
+                  <div
+                    className="form-field flex items-center gap-2 p-4 rounded-xl mb-5 text-sm"
+                    style={{
+                      background:   "rgba(248,113,113,0.1)",
+                      border:       "1px solid rgba(248,113,113,0.3)",
+                      color:        "#fca5a5",
+                    }}
+                    role="alert"
+                  >
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                    {apiError}
+                  </div>
+                )}
+
+                {/* Honeypot — hidden from humans */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="sr-only"
+                  autoComplete="off"
+                />
+
                 <div className="grid sm:grid-cols-2 gap-5 mb-5">
-                  <InputField id="contact-name" label="Your Name" required error={errors.name}>
+                  {/* Name */}
+                  <div className="form-field">
+                    <label
+                      htmlFor="contact-name"
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: "var(--color-ink-muted)" }}
+                    >
+                      Nama <span aria-hidden="true" style={{ color: "var(--color-mint)" }}>*</span>
+                      <span className="sr-only">(wajib)</span>
+                    </label>
                     <input
                       id="contact-name"
                       name="name"
@@ -275,15 +364,25 @@ export default function ContactSection() {
                       onChange={handleChange}
                       autoComplete="name"
                       placeholder="Muhammad Alif"
+                      disabled={status === "sending"}
                       aria-invalid={!!errors.name}
-                      aria-describedby={errors.name ? "contact-name-error" : undefined}
-                      style={{ ...inputBase }}
+                      style={inputBase}
                       onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(184,216,199,0.4)"; }}
                       onBlur={(e)  => { e.currentTarget.style.borderColor = errors.name ? "#f87171" : "rgba(255,255,255,0.1)"; }}
                     />
-                  </InputField>
+                    <FieldError msg={errors.name} />
+                  </div>
 
-                  <InputField id="contact-email" label="Email Address" required error={errors.email}>
+                  {/* Email */}
+                  <div className="form-field">
+                    <label
+                      htmlFor="contact-email"
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: "var(--color-ink-muted)" }}
+                    >
+                      Email <span aria-hidden="true" style={{ color: "var(--color-mint)" }}>*</span>
+                      <span className="sr-only">(wajib)</span>
+                    </label>
                     <input
                       id="contact-email"
                       name="email"
@@ -292,40 +391,71 @@ export default function ContactSection() {
                       onChange={handleChange}
                       autoComplete="email"
                       placeholder="hello@example.com"
+                      disabled={status === "sending"}
                       aria-invalid={!!errors.email}
-                      style={{ ...inputBase }}
+                      style={inputBase}
                       onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(184,216,199,0.4)"; }}
                       onBlur={(e)  => { e.currentTarget.style.borderColor = errors.email ? "#f87171" : "rgba(255,255,255,0.1)"; }}
                     />
-                  </InputField>
+                    <FieldError msg={errors.email} />
+                  </div>
                 </div>
 
-                <InputField id="contact-message" label="Message" required error={errors.message}>
+                {/* Message */}
+                <div className="form-field mb-6">
+                  <label
+                    htmlFor="contact-message"
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: "var(--color-ink-muted)" }}
+                  >
+                    Pesan <span aria-hidden="true" style={{ color: "var(--color-mint)" }}>*</span>
+                    <span className="sr-only">(wajib)</span>
+                  </label>
                   <textarea
                     id="contact-message"
                     name="message"
                     value={fields.message}
                     onChange={handleChange}
                     rows={5}
-                    placeholder="Tell me about your project or just say hello..."
+                    placeholder="Ceritakan proyek atau kebutuhan Anda..."
+                    disabled={status === "sending"}
                     aria-invalid={!!errors.message}
                     style={{ ...inputBase, minHeight: "140px", resize: "vertical" }}
                     onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(184,216,199,0.4)"; }}
                     onBlur={(e)  => { e.currentTarget.style.borderColor = errors.message ? "#f87171" : "rgba(255,255,255,0.1)"; }}
                   />
-                </InputField>
+                  <FieldError msg={errors.message} />
+                </div>
 
-                <div className="mt-6 form-field">
+                {/* Submit */}
+                <div className="form-field">
                   <button
                     type="submit"
                     disabled={status === "sending"}
-                    className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{ background: "var(--color-mint)", color: "var(--color-canvas)", minHeight: "48px" }}
-                    onMouseEnter={(e) => { if (status !== "sending") e.currentTarget.style.background = "var(--color-mint-light)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-mint)"; }}
+                    className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+                    style={{
+                      background: "var(--color-mint)",
+                      color:      "var(--color-canvas)",
+                      minHeight:  "48px",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (status !== "sending") e.currentTarget.style.background = "var(--color-mint-light)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "var(--color-mint)";
+                    }}
                   >
-                    <Send className="w-4 h-4" aria-hidden="true" />
-                    {status === "sending" ? "Opening email client…" : "Send Message"}
+                    {status === "sending" ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                        Mengirim…
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" aria-hidden="true" />
+                        Kirim Pesan
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -333,12 +463,21 @@ export default function ContactSection() {
           </div>
 
           {/* ── Divider ── */}
-          <div className="mb-10 h-px mx-auto" aria-hidden="true"
-            style={{ maxWidth: "200px", background: "linear-gradient(to right,transparent,rgba(184,216,199,0.3),transparent)" }}
+          <div
+            className="mb-10 h-px mx-auto"
+            aria-hidden="true"
+            style={{
+              maxWidth:   "200px",
+              background: "linear-gradient(to right,transparent,rgba(184,216,199,0.3),transparent)",
+            }}
           />
 
           {/* ── Social links ── */}
-          <nav ref={socialRef} aria-label="Social media links" className="flex items-center justify-center gap-5">
+          <nav
+            ref={socialRef}
+            aria-label="Social media links"
+            className="flex items-center justify-center gap-5"
+          >
             {socialLinks.map(({ label, href, Icon }) => (
               <a
                 key={label}
@@ -356,8 +495,14 @@ export default function ContactSection() {
                   height:         "48px",
                   minWidth:       "48px",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(184,216,199,0.35)"; e.currentTarget.style.color = "var(--color-ink)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";  e.currentTarget.style.color = "var(--color-ink-muted)"; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(184,216,199,0.35)";
+                  e.currentTarget.style.color       = "var(--color-ink)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                  e.currentTarget.style.color       = "var(--color-ink-muted)";
+                }}
               >
                 <Icon className="w-5 h-5" aria-hidden="true" />
               </a>

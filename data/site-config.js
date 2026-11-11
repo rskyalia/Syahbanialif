@@ -7,8 +7,8 @@ export const siteConfig = {
   title: "Muhammad Alif Sya'bani — Creative Developer & Designer",
   description:
     "Personal portfolio of Muhammad Alif Sya'bani. Creative Developer, Programmer, Graphic Designer, and Public Speaker based in Indonesia.",
-  url: "https://syahbanialif.com",
-  ogImage: "/images/og-image.jpg",
+  url:      "https://alifportfolio-tau.vercel.app",
+  ogImage:  "/images/og-image.jpg",
   keywords: [
     "Muhammad Alif Sya'bani",
     "Creative Developer",
@@ -20,11 +20,11 @@ export const siteConfig = {
     "Indonesia",
   ],
   social: {
-    twitter: "@syahbanialif",
-    github: "https://github.com/syahbanialif",
-    linkedin: "https://linkedin.com/in/syahbanialif",
+    twitter:   "@syahbanialif",
+    github:    "https://github.com/rskyalia",
+    linkedin:  "https://linkedin.com/in/syahbanialif",
     instagram: "https://instagram.com/syahbanialif",
-    email: "hello@syahbanialif.com",
+    email:     "hello@syahbanialif.com",
   },
 };
 

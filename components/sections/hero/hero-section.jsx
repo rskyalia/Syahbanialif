@@ -143,7 +143,8 @@ export default function HeroSection() {
           loop
           muted
           playsInline
-          preload="metadata"          /* 'metadata' not 'auto' — saves bandwidth on mobile */
+          preload="metadata"
+          poster="/images/og-image.jpg"
           aria-hidden="true"
           style={{
             position:        "absolute",

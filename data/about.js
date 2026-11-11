@@ -13,12 +13,18 @@ export const personalInfo = {
 };
 
 /**
- * Stats — shown as animated counters in the About section.
+ * Stats — hanya tampilkan angka yang dapat diverifikasi dari data nyata.
+ * Jangan mengarang angka untuk terlihat lebih impressive.
+ *
+ * Verifikasi:
+ * - 3 projects: portfolio v2, alia portfolio, al resume builder (data/projects.js)
+ * - 4 skills categories: Programming, Database, Graphic Design, AI (data/about.js skills)
+ * - 9 achievements: total entries di data/experience.js achievements array
  */
 export const stats = [
-  { label: "Projects Completed", value: 10,  suffix: "+" },
-  { label: "Years Experience",   value: 2,   suffix: "+" },
-  { label: "Technologies Used",  value: 15,  suffix: "+" },
+  { label: "Projects",    value: 3,  suffix: "+"  },
+  { label: "Skill Areas", value: 4,  suffix: ""   },
+  { label: "Achievements", value: 9, suffix: "+"  },
 ];
 
 /**

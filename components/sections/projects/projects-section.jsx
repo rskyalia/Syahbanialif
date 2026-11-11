@@ -2,9 +2,10 @@
 
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { gsap, useGSAP } from "@/animations/gsap-config";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ExternalLink, Github, ArrowRight } from "lucide-react";
+import { ExternalLink, Github, ArrowRight, BookOpen } from "lucide-react";
 import {
   SectionWrapper,
   SectionHeading,
@@ -376,6 +377,18 @@ export default function ProjectsSection() {
                         Private
                       </span>
                     )}
+
+                    {/* Case Study — always shown */}
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link
+                        href={`/projects/${project.slug}`}
+                        className="inline-flex items-center gap-2"
+                        aria-label={`Read case study for ${project.title}`}
+                      >
+                        <BookOpen className="w-4 h-4" aria-hidden="true" />
+                        Case Study
+                      </Link>
+                    </Button>
                   </div>
 
                 </div>
