@@ -6,7 +6,6 @@ export default function Loading() {
   return (
     <div
       className="flex min-h-screen items-center justify-center"
-      style={{ background: "var(--color-canvas)" }}
       role="status"
       aria-label="Loading"
     >

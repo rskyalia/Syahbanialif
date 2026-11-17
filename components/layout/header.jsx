@@ -5,15 +5,32 @@ import { Menu, X } from "lucide-react";
 import { gsap, useGSAP } from "@/animations/gsap-config";
 import { cn } from "@/lib/utils";
 import { navLinks } from "@/data/navigation";
-import { useScrollPosition } from "@/hooks";
+import { useScrollPosition, useActiveSection } from "@/hooks";
 import Button from "@/components/ui/button";
 import IconButton from "@/components/ui/icon-button";
 
+/**
+ * Section ids in document order — module-level constant so the
+ * scrollspy hook receives a referentially-stable array.
+ */
+const SECTION_IDS = navLinks.map((l) => l.href.replace("#", ""));
+
 export default function Header() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { isScrolled } = useScrollPosition(80);
-  const headerRef    = useRef(null);
-  const mobileNavRef = useRef(null);
+  const { isScrolled } = useScrollPosition(40);
+  const activeId       = useActiveSection(SECTION_IDS, 0.4);
+
+  const rootRef       = useRef(null);   // wraps header + mobile menu (GSAP scope)
+  const headerRef     = useRef(null);   // fixed header bar
+  const pillRef       = useRef(null);   // the floating glass pill
+  const navListRef    = useRef(null);   // desktop <ul>
+  const indicatorRef  = useRef(null);   // active mint indicator
+  const mobileNavRef  = useRef(null);   // mobile dialog container
+  const backdropRef   = useRef(null);   // mobile backdrop
+  const activeIdRef   = useRef(activeId);
+
+  /* keep a ref copy of activeId so the indicator positioner stays stable */
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
 
   /* ── Entrance animation ── */
   useGSAP(
@@ -34,8 +51,141 @@ export default function Header() {
         }
       );
     },
-    { scope: headerRef }
+    { scope: rootRef }
   );
+
+  /* ── Position the active indicator under the current link ── */
+  const firstIndicator = useRef(true);
+
+  const positionIndicator = useCallback((animate) => {
+    const list      = navListRef.current;
+    const indicator = indicatorRef.current;
+    if (!list || !indicator) return;
+
+    // Indicator is desktop-only; bail (and hide) when the desktop list is off.
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    if (!isDesktop) {
+      gsap.set(indicator, { width: 0, x: 0, opacity: 0 });
+      return;
+    }
+
+    const activeLink = list.querySelector(`[data-href="#${activeIdRef.current}"]`);
+    if (!activeLink || activeLink.offsetWidth === 0) return;
+
+    const x = activeLink.offsetLeft;
+    const w = activeLink.offsetWidth;
+
+    if (animate && !firstIndicator.current) {
+      gsap.to(indicator, { x, width: w, opacity: 1, duration: 0.45, ease: "power3.out" });
+    } else {
+      gsap.set(indicator, { x, width: w, opacity: 1 });
+      firstIndicator.current = false;
+    }
+  }, []);
+
+  // Re-position whenever the active section changes.
+  useEffect(() => {
+    positionIndicator(true);
+  }, [activeId, positionIndicator]);
+
+  // Re-position on resize (breakpoint changes the visible link set) and
+  // once web fonts have loaded (link widths shift with the font swap).
+  useEffect(() => {
+    let rafId = null;
+    const onResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => positionIndicator(false));
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => positionIndicator(false)).catch(() => {});
+    }
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [positionIndicator]);
+
+  /* ── Scroll-based glass transformation: subtle scale (GSAP) ──
+     Opacity / blur / saturation are handled by the .is-scrolled CSS class
+     transition; the scale is driven here with GSAP for a smooth settle. */
+  useEffect(() => {
+    const pill = pillRef.current;
+    if (!pill) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      gsap.set(pill, { scale: 1 });
+      return;
+    }
+    gsap.to(pill, { scale: isScrolled ? 0.985 : 1, duration: 0.5, ease: "power3.out" });
+  }, [isScrolled]);
+
+  /* ── Pointer-follow glow: track cursor across the glass ── */
+  const handlePointerGlow = useCallback((e) => {
+    const pill = pillRef.current;
+    if (!pill) return;
+    const rect = pill.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    pill.style.setProperty("--lg-mx", `${x}%`);
+    pill.style.setProperty("--lg-my", `${y}%`);
+  }, []);
+
+  /* ── Mobile menu: staggered open / close (GSAP, bidirectional) ──
+     A plain effect (not useGSAP) is used because useGSAP reverts the
+     previous context on dependency change, which would snap the panel
+     shut instead of animating the close. We kill in-flight tweens on
+     cleanup without reverting, so each open/close plays out fully. */
+  useEffect(() => {
+    const panel    = mobileNavRef.current;
+    const backdrop = backdropRef.current;
+    if (!panel || !backdrop) return;
+
+    const items    = panel.querySelectorAll("[data-mobile-item]");
+    const reduced  = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (isMobileOpen) {
+      if (reduced) {
+        gsap.set(backdrop, { opacity: 1 });
+        gsap.set(panel, { yPercent: 0 });
+        gsap.set(items, { opacity: 1, y: 0 });
+      } else {
+        gsap.to(backdrop, { opacity: 1, duration: 0.4, ease: "power2.out" });
+        gsap.fromTo(
+          panel,
+          { yPercent: 100 },
+          { yPercent: 0, duration: 0.5, ease: "power3.out" }
+        );
+        gsap.fromTo(
+          items,
+          { opacity: 0, y: 14 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: 0.06,
+            ease: "power3.out",
+            delay: 0.12,
+          }
+        );
+      }
+    } else {
+      if (reduced) {
+        gsap.set(backdrop, { opacity: 0 });
+        gsap.set(panel, { yPercent: 100 });
+        gsap.set(items, { opacity: 0, y: 14 });
+      } else {
+        gsap.to(backdrop, { opacity: 0, duration: 0.3, ease: "power2.in" });
+        gsap.to(panel, { yPercent: 100, duration: 0.35, ease: "power3.in" });
+        gsap.to(items, { opacity: 0, y: 10, duration: 0.25, stagger: 0.03, ease: "power2.in" });
+      }
+    }
+
+    return () => {
+      gsap.killTweensOf([backdrop, panel, items]);
+    };
+  }, [isMobileOpen]);
 
   /* ── Close on resize to desktop ── */
   useEffect(() => {
@@ -63,77 +213,96 @@ export default function Header() {
   const closeMenu = useCallback(() => setIsMobileOpen(false), []);
 
   return (
-    <>
+    <div ref={rootRef}>
       <header
         ref={headerRef}
-        className={cn(
-          "fixed inset-x-0 top-0 z-50",
-          "transition-all duration-500",
-          isScrolled ? "px-4 pt-3" : "px-0 pt-0"
-        )}
+        className="fixed inset-x-0 top-0 z-[1000] px-3 sm:px-6 pt-4 sm:pt-6 pointer-events-none"
         style={{ opacity: 0 }}
       >
         <nav
+          ref={pillRef}
+          onMouseMove={handlePointerGlow}
           className={cn(
-            "flex items-center justify-between",
-            "transition-all duration-500",
-            isScrolled
-              ? "glass-heavy glass-rim rounded-2xl px-5 py-3 mx-auto max-w-5xl shadow-lg"
-              : "container-main py-5"
+            "liquid-glass rounded-pill pointer-events-auto",
+            "mx-auto w-full max-w-4xl",
+            "px-3.5 sm:px-5 py-2 sm:py-2.5",
+            isScrolled && "is-scrolled"
           )}
           aria-label="Main navigation"
         >
-          {/* Logo */}
-          <a
-            href="#home"
-            onClick={closeMenu}
-            className="font-brand font-bold tracking-tight text-xl transition-colors duration-300 hover:text-[var(--color-mint)] flex items-center gap-0.5"
-            style={{ color: "var(--color-ink)", fontFamily: "var(--font-brand)" }}
-            aria-label="Muhammad Alif Sya'bani — back to top"
-          >
-            Alif<span style={{ color: "var(--color-mint)" }} aria-hidden="true">.</span>
-          </a>
+          <div className="relative z-10 flex items-center justify-between gap-2 sm:gap-3">
 
-          {/* Desktop nav */}
-          <ul className="hidden md:flex items-center gap-0.5" role="list">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  className="relative px-4 py-2 rounded-full text-sm transition-colors duration-300 hover:bg-[var(--color-canvas-high)] link-underline"
-                  style={{ color: "var(--color-ink-muted)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-ink)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-ink-muted)"; }}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+            {/* Logo */}
+            <a
+              href="#home"
+              onClick={closeMenu}
+              className="font-brand font-bold tracking-tight text-xl transition-colors duration-300 hover:text-[var(--color-mint)] flex items-center gap-0.5 select-none"
+              style={{ color: "#F5F7F5", fontFamily: "var(--font-brand)" }}
+              aria-label="Muhammad Alif Sya'bani — back to top"
+            >
+              Alif<span style={{ color: "var(--color-mint)" }} aria-hidden="true">.</span>
+            </a>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:block">
-            <Button as="a" href="#contact" variant="primary" size="sm">
-              Let&apos;s Talk
-            </Button>
+            {/* Desktop nav */}
+            <ul ref={navListRef} className="relative hidden md:flex items-center gap-0.5 lg:gap-1" role="list">
+              <span ref={indicatorRef} className="lg-nav-indicator" aria-hidden="true" />
+              {navLinks.map((link) => {
+                const isActive = activeId === link.href.slice(1);
+                return (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      data-href={link.href}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn("lg-nav-link text-xs lg:text-sm", isActive && "is-active")}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Desktop CTA */}
+            <div className="hidden md:block">
+              <Button as="a" href="#contact" variant="primary" size="sm" className="shadow-mint">
+                Let&apos;s Talk
+              </Button>
+            </div>
+
+            {/* Mobile toggle — animated hamburger ↔ X */}
+            <IconButton
+              variant="ghost"
+              size="md"
+              label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
+              className="md:hidden relative text-white hover:text-[var(--color-mint)]"
+              onClick={() => setIsMobileOpen((p) => !p)}
+              aria-expanded={isMobileOpen}
+              aria-controls="mobile-nav"
+              aria-haspopup="dialog"
+            >
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-smooth"
+                style={{
+                  opacity:   isMobileOpen ? 0 : 1,
+                  transform: isMobileOpen ? "rotate(90deg) scale(0.5)" : "rotate(0deg) scale(1)",
+                }}
+              >
+                <Menu size={20} aria-hidden="true" />
+              </span>
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-smooth"
+                style={{
+                  opacity:   isMobileOpen ? 1 : 0,
+                  transform: isMobileOpen ? "rotate(0deg) scale(1)" : "rotate(-90deg) scale(0.5)",
+                }}
+              >
+                <X size={20} aria-hidden="true" />
+              </span>
+            </IconButton>
           </div>
-
-          {/* Mobile toggle */}
-          <IconButton
-            variant="ghost"
-            size="md"
-            label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
-            className="md:hidden"
-            onClick={() => setIsMobileOpen((p) => !p)}
-            aria-expanded={isMobileOpen}
-            aria-controls="mobile-nav"
-            aria-haspopup="dialog"
-          >
-            {isMobileOpen
-              ? <X size={20} aria-hidden="true" />
-              : <Menu size={20} aria-hidden="true" />
-            }
-          </IconButton>
         </nav>
       </header>
 
@@ -144,60 +313,79 @@ export default function Header() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        /* Conditionally inert to prevent focus trapping when closed */
-        inert={!isMobileOpen ? true : undefined}
+        inert={!isMobileOpen ? "true" : undefined}
         className={cn(
           "fixed inset-0 z-40 md:hidden flex flex-col",
-          "transition-all duration-500",
-          isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isMobileOpen ? "pointer-events-auto" : "pointer-events-none"
         )}
       >
         {/* Backdrop */}
         <div
-          className="absolute inset-0 backdrop-blur-xl"
-          style={{ background: "rgba(16,29,37,0.85)" }}
+          ref={backdropRef}
+          className="absolute inset-0"
+          style={{ background: "rgba(10,18,22,0.60)", opacity: 0 }}
           onClick={closeMenu}
           aria-hidden="true"
         />
 
-        {/* Slide-up panel */}
+        {/* Slide-up liquid glass panel */}
         <nav
           aria-label="Mobile navigation links"
-          className={cn(
-            "relative mt-auto glass-heavy glass-rim rounded-t-3xl p-8 pb-12",
-            "transition-transform duration-500",
-            isMobileOpen ? "translate-y-0" : "translate-y-full"
-          )}
+          className="liquid-glass-panel relative mt-auto rounded-t-3xl p-6 pb-10 sm:mx-4 sm:rounded-3xl"
+          style={{ transform: "translateY(100%)" }}
         >
-          <ul className="flex flex-col gap-1 mb-8" role="list">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  className="block rounded-xl px-5 py-4 text-lg transition-colors duration-300 hover:bg-[var(--color-canvas-high)]"
-                  style={{ color: "var(--color-ink-muted)", minHeight: "52px", display: "flex", alignItems: "center" }}
-                  onClick={closeMenu}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-ink)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-ink-muted)"; }}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <div className="mx-auto w-full max-w-md">
+            {/* Grab handle */}
+            <div
+              aria-hidden="true"
+              className="mx-auto mb-5 h-1 w-10 rounded-pill"
+              style={{ background: "rgba(255,255,255,0.25)" }}
+            />
 
-          <Button
-            as="a"
-            href="#contact"
-            variant="primary"
-            size="lg"
-            className="w-full text-center justify-center"
-            onClick={closeMenu}
-          >
-            Let&apos;s Talk
-          </Button>
+            <ul className="flex flex-col gap-1 mb-6" role="list">
+              {navLinks.map((link, i) => {
+                const isActive = activeId === link.href.slice(1);
+                return (
+                  <li key={link.href} data-mobile-item>
+                    <a
+                      href={link.href}
+                      onClick={closeMenu}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "flex items-center rounded-2xl px-5 py-3.5 text-base sm:text-lg font-medium",
+                        "min-h-[50px] transition-colors duration-250",
+                        isActive
+                          ? "text-white font-semibold bg-white/10 shadow-sm"
+                          : "text-white/85 hover:text-white hover:bg-white/5"
+                      )}
+                    >
+                      <span
+                        className="font-mono text-xs mr-4 select-none font-semibold"
+                        style={{ color: "var(--color-mint)", opacity: 0.9 }}
+                        aria-hidden="true"
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      {link.label}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <Button
+              as="a"
+              href="#contact"
+              variant="primary"
+              size="lg"
+              className="w-full text-center justify-center"
+              onClick={closeMenu}
+            >
+              Let&apos;s Talk
+            </Button>
+          </div>
         </nav>
       </div>
-    </>
+    </div>
   );
 }

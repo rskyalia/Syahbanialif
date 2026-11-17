@@ -3,6 +3,7 @@ import { inter, bergant, cormorant, jetbrainsMono } from "./fonts";
 import { siteConfig } from "@/data/site-config";
 import SmoothScroll    from "@/components/providers/smooth-scroll";
 import ScrollProgress  from "@/components/ui/scroll-progress";
+import GlobalAtmosphere from "@/components/background/global-atmosphere";
 
 /* ── Canonical metadata ── */
 export const metadata = {
@@ -148,7 +149,7 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://github.com" />
         <link rel="dns-prefetch" href="https://linkedin.com" />
       </head>
-      <body className="bg-canvas text-ink antialiased">
+      <body className="atmospheric-base text-ink antialiased">
         {/* Skip-to-content link — keyboard / screen reader accessibility */}
         <a
           href="#main-content"
@@ -156,6 +157,9 @@ export default function RootLayout({ children }) {
         >
           Skip to main content
         </a>
+
+        {/* Immersive global atmosphere + film grain — behind all content */}
+        <GlobalAtmosphere />
 
         <ScrollProgress />
         <SmoothScroll>{children}</SmoothScroll>

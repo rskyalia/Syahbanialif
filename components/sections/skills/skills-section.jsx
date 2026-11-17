@@ -79,6 +79,7 @@ export default function SkillsSection() {
     <SectionWrapper
       id="skills"
       bg="transparent"
+      background="skills"
       className="py-24 md:py-32"
       style={{
         background: "linear-gradient(180deg, transparent, rgba(24,52,58,0.18) 50%, transparent)",

@@ -205,7 +205,7 @@ export default function ContactSection() {
   );
 
   return (
-    <SectionWrapper id="contact" className="py-24 md:py-36">
+    <SectionWrapper id="contact" background="contact" className="py-24 md:py-36">
       <div ref={sectionRef} className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
 

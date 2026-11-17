@@ -212,7 +212,7 @@ export default function JourneySection() {
   );
 
   return (
-    <SectionWrapper id="journey" className="py-24 md:py-32">
+    <SectionWrapper id="journey" background="journey" className="py-24 md:py-32">
       <div ref={sectionRef} className="container mx-auto px-4">
 
         <SectionHeading

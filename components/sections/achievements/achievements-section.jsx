@@ -2,13 +2,10 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { gsap, useGSAP } from "@/animations/gsap-config";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { gsap, useGSAP, ScrollTrigger } from "@/animations/gsap-config";
 import { Trophy, Users, Mic, Palette, Star, X } from "lucide-react";
 import { SectionWrapper, SectionHeading, Badge } from "@/components/ui";
 import { achievements } from "@/data/experience";
-
-gsap.registerPlugin(ScrollTrigger);
 
 const categoryConfig = {
   competition: { label: "Competition",  Icon: Trophy,  color: "var(--color-mint)"       },
@@ -234,7 +231,7 @@ export default function AchievementsSection() {
 
   return (
     <>
-      <SectionWrapper id="achievements" className="py-24 md:py-32">
+      <SectionWrapper id="achievements" background="achievements" className="py-24 md:py-32">
         <div
           ref={sectionRef}
           className="container mx-auto px-4"

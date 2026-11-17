@@ -82,7 +82,7 @@ export default function AboutSection() {
   );
 
   return (
-    <SectionWrapper id="about" className="py-24 md:py-32">
+    <SectionWrapper id="about" background="about" className="py-24 md:py-32">
       <div ref={sectionRef} className="container mx-auto px-4">
 
         <SectionHeading

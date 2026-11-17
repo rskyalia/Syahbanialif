@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Tag } from "lucide-react";
 import { projects, projectCategories } from "@/data/projects";
 import ProjectActions from "./project-actions";
+import { Header } from "@/components/layout";
+import SectionBackground from "@/components/background/section-background";
 
 /* ── Static params ── */
 export function generateStaticParams() {
@@ -34,210 +36,279 @@ export default function ProjectDetailPage({ params }) {
   const cs = project.caseStudy;
 
   return (
-    <main
-      className="min-h-screen"
-      style={{ background: "var(--color-canvas)", color: "var(--color-ink)" }}
-    >
-      {/* ── Back link ── */}
-      <div className="container-main pt-28 pb-6">
-        <Link
-          href="/#projects"
-          className="inline-flex items-center gap-2 text-sm transition-colors duration-300 group"
-          style={{ color: "var(--color-ink-muted)" }}
-        >
-          <ArrowLeft
-            className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"
-            aria-hidden="true"
-          />
-          Back to Projects
-        </Link>
-      </div>
+    <>
+      <Header />
 
-      {/* ── Hero image ── */}
-      <div className="container-main pb-12">
-        <div
-          className="relative w-full overflow-hidden rounded-2xl"
-          style={{
-            aspectRatio: "16/9",
-            background:  "var(--color-canvas-mid)",
-            boxShadow:   "0 24px 60px rgba(0,0,0,0.5)",
-          }}
-        >
-          <Image
-            src={project.image}
-            alt={`Screenshot of ${project.title}`}
-            fill
-            priority
-            sizes="(max-width: 1280px) 100vw, 1280px"
-            className="object-cover object-top"
-          />
+      <main
+        className="min-h-screen"
+        style={{ color: "var(--color-ink)" }}
+      >
+        {/* ── Atmospheric page background ── */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <SectionBackground variant="projects" />
         </div>
-      </div>
 
-      {/* ── Main content ── */}
-      <div className="container-main pb-24">
-        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
-
-          {/* Left — main content */}
-          <div className="lg:col-span-8">
-
-            {/* Category + year + role */}
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <span
-                className="text-xs font-mono uppercase tracking-wider"
-                style={{ color: "var(--color-mint)" }}
-              >
-                {categoryLabel}
-              </span>
-              <span style={{ color: "var(--color-ink-subtle)" }} aria-hidden="true">•</span>
-              <span className="text-xs" style={{ color: "var(--color-ink-subtle)" }}>
-                {project.year}
-              </span>
-              {project.role && (
-                <>
-                  <span style={{ color: "var(--color-ink-subtle)" }} aria-hidden="true">•</span>
-                  <span className="text-xs" style={{ color: "var(--color-ink-subtle)" }}>
+        {/* ── Hero banner ── */}
+        <div className="relative pt-28 pb-0 overflow-hidden">
+          {/* Full-bleed project image with cinematic overlay */}
+          <div className="container-main">
+            <div
+              className="relative w-full overflow-hidden rounded-3xl"
+              style={{
+                aspectRatio: "16/8",
+                background:  "var(--color-canvas-mid)",
+                boxShadow:   "0 32px 80px rgba(0,0,0,0.55)",
+              }}
+            >
+              <Image
+                src={project.image}
+                alt={`Screenshot of ${project.title}`}
+                fill
+                priority
+                sizes="(max-width: 1280px) 100vw, 1280px"
+                className="object-cover object-top"
+              />
+              {/* Cinematic gradient overlay */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(11,21,29,0.85) 0%, rgba(11,21,29,0.3) 40%, transparent 70%)",
+                }}
+                aria-hidden="true"
+              />
+              {/* Category + year pill */}
+              <div className="absolute top-5 left-5 z-10">
+                <span
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono uppercase tracking-wider"
+                  style={{
+                    background:         "rgba(11,21,29,0.6)",
+                    backdropFilter:     "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    border:             "1px solid rgba(255,255,255,0.12)",
+                    color:              "var(--color-mint)",
+                  }}
+                >
+                  {categoryLabel}
+                  {project.year && (
+                    <><span style={{ opacity: 0.4 }}>·</span> {project.year}</>
+                  )}
+                </span>
+              </div>
+              {/* Title overlay at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10 z-10">
+                <h1
+                  className="font-display font-bold leading-tight"
+                  style={{ fontSize: "clamp(1.8rem,4.5vw,3.2rem)", color: "var(--color-ink)" }}
+                >
+                  {project.title}
+                </h1>
+                {project.role && (
+                  <p
+                    className="mt-2 text-sm font-mono uppercase tracking-wider"
+                    style={{ color: "var(--color-mint)" }}
+                  >
                     {project.role}
-                  </span>
-                </>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Back link ── */}
+        <div className="container-main pt-8 pb-4 relative z-10">
+          <Link
+            href="/#projects"
+            className="inline-flex items-center gap-2 text-sm transition-colors duration-300 group"
+            style={{ color: "var(--color-ink-muted)" }}
+            onMouseEnter={undefined}
+          >
+            <ArrowLeft
+              className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"
+              aria-hidden="true"
+            />
+            Back to Projects
+          </Link>
+        </div>
+
+        {/* ── Main content ── */}
+        <div className="container-main pb-28 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-14">
+
+            {/* Left — main content */}
+            <div className="lg:col-span-8">
+
+              {/* Description lead */}
+              <p
+                className="text-lg md:text-xl leading-relaxed mb-10 font-light"
+                style={{ color: "var(--color-ink-muted)" }}
+              >
+                {project.description}
+              </p>
+
+              {/* Case study */}
+              {cs ? (
+                <div className="space-y-10">
+                  {[
+                    { label: "Problem",  content: cs.problem  },
+                    { label: "Solution", content: cs.solution },
+                    { label: "Process",  content: cs.process  },
+                    { label: "Result",   content: cs.result   },
+                  ].filter(({ content }) => !!content).map(({ label, content }) => (
+                    <div
+                      key={label}
+                      className="rounded-2xl p-7"
+                      style={{
+                        background:         "rgba(24,52,58,0.3)",
+                        backdropFilter:     "blur(16px)",
+                        WebkitBackdropFilter: "blur(16px)",
+                        border:             "1px solid rgba(255,255,255,0.07)",
+                        boxShadow:          "inset 0 1px 0 rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <h2
+                        className="text-xs font-mono uppercase tracking-widest mb-4 flex items-center gap-3"
+                        style={{ color: "var(--color-mint)" }}
+                      >
+                        <span
+                          className="inline-block w-6 h-px flex-shrink-0"
+                          style={{ background: "var(--color-mint)", opacity: 0.5 }}
+                          aria-hidden="true"
+                        />
+                        {label}
+                      </h2>
+                      <p className="leading-relaxed text-base" style={{ color: "var(--color-ink-muted)" }}>
+                        {content}
+                      </p>
+                    </div>
+                  ))}
+
+                  {cs.techDetails?.length > 0 && (
+                    <div
+                      className="rounded-2xl p-7"
+                      style={{
+                        background:         "rgba(24,52,58,0.3)",
+                        backdropFilter:     "blur(16px)",
+                        WebkitBackdropFilter: "blur(16px)",
+                        border:             "1px solid rgba(255,255,255,0.07)",
+                        boxShadow:          "inset 0 1px 0 rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <h2
+                        className="text-xs font-mono uppercase tracking-widest mb-5 flex items-center gap-3"
+                        style={{ color: "var(--color-mint)" }}
+                      >
+                        <span
+                          className="inline-block w-6 h-px flex-shrink-0"
+                          style={{ background: "var(--color-mint)", opacity: 0.5 }}
+                          aria-hidden="true"
+                        />
+                        Technical Details
+                      </h2>
+                      <ul className="space-y-3">
+                        {cs.techDetails.map((detail, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-3 text-sm"
+                            style={{ color: "var(--color-ink-muted)" }}
+                          >
+                            <span
+                              className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                              style={{ background: "var(--color-mint)" }}
+                              aria-hidden="true"
+                            />
+                            {detail}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className="rounded-2xl p-8 text-center"
+                  style={{
+                    background: "rgba(24,52,58,0.25)",
+                    border:     "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <p className="text-sm italic" style={{ color: "var(--color-ink-subtle)" }}>
+                    Dokumentasi case study untuk proyek ini belum tersedia.
+                  </p>
+                </div>
               )}
             </div>
 
-            {/* Title */}
-            <h1
-              className="font-display font-bold leading-tight mb-6"
-              style={{ fontSize: "clamp(2rem,5vw,3.5rem)", color: "var(--color-ink)" }}
-            >
-              {project.title}
-            </h1>
+            {/* Right — sticky glass sidebar */}
+            <aside className="lg:col-span-4">
+              <div
+                className="sticky top-28 rounded-2xl p-6 space-y-6"
+                style={{
+                  background:         "rgba(24,52,58,0.35)",
+                  backdropFilter:     "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border:             "1px solid rgba(255,255,255,0.10)",
+                  boxShadow:          "inset 0 1px 0 rgba(255,255,255,0.08), 0 20px 48px rgba(0,0,0,0.3)",
+                }}
+              >
+                {/* Interactive action buttons */}
+                <ProjectActions
+                  liveUrl={project.liveUrl}
+                  repoUrl={project.repoUrl}
+                  title={project.title}
+                />
 
-            {/* Description */}
-            <p className="text-lg leading-relaxed mb-10" style={{ color: "var(--color-ink-muted)" }}>
-              {project.description}
-            </p>
+                <hr style={{ borderColor: "rgba(255,255,255,0.08)" }} />
 
-            {/* Case study */}
-            {cs ? (
-              <div className="space-y-10">
-                {[
-                  { label: "Problem",  content: cs.problem  },
-                  { label: "Solution", content: cs.solution },
-                  { label: "Process",  content: cs.process  },
-                  { label: "Result",   content: cs.result   },
-                ].map(({ label, content }) => (
-                  <div key={label}>
-                    <h2
-                      className="text-xs font-mono uppercase tracking-widest mb-3"
+                {/* Meta */}
+                <dl className="space-y-4 text-sm">
+                  <div className="flex items-center gap-3">
+                    <Calendar
+                      className="w-4 h-4 flex-shrink-0"
                       style={{ color: "var(--color-mint)" }}
-                    >
-                      {label}
-                    </h2>
-                    <p className="leading-relaxed" style={{ color: "var(--color-ink-muted)" }}>
-                      {content}
-                    </p>
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <dt className="sr-only">Year</dt>
+                      <dd style={{ color: "var(--color-ink-muted)" }}>{project.year}</dd>
+                    </div>
                   </div>
-                ))}
 
-                {cs.techDetails?.length > 0 && (
-                  <div>
-                    <h2
-                      className="text-xs font-mono uppercase tracking-widest mb-4"
+                  <div className="flex items-start gap-3">
+                    <Tag
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
                       style={{ color: "var(--color-mint)" }}
-                    >
-                      Technical Details
-                    </h2>
-                    <ul className="space-y-2">
-                      {cs.techDetails.map((detail, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-3 text-sm"
-                          style={{ color: "var(--color-ink-muted)" }}
-                        >
-                          <span
-                            className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                            style={{ background: "var(--color-mint)" }}
-                            aria-hidden="true"
-                          />
-                          {detail}
-                        </li>
-                      ))}
-                    </ul>
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <dt className="sr-only">Technologies</dt>
+                      <dd>
+                        <div className="flex flex-wrap gap-1.5">
+                          {project.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-xs px-2.5 py-1 rounded-full"
+                              style={{
+                                background: "rgba(184,216,199,0.1)",
+                                color:      "var(--color-mint)",
+                                border:     "1px solid rgba(184,216,199,0.2)",
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </dd>
+                    </div>
                   </div>
-                )}
+                </dl>
               </div>
-            ) : (
-              <p className="text-sm italic" style={{ color: "var(--color-ink-subtle)" }}>
-                Dokumentasi case study untuk proyek ini belum tersedia.
-              </p>
-            )}
+            </aside>
+
           </div>
-
-          {/* Right — sidebar with client interactivity */}
-          <aside className="lg:col-span-4">
-            <div
-              className="sticky top-24 rounded-2xl p-6 space-y-6"
-              style={{
-                backdropFilter: "blur(16px)",
-                background:     "rgba(24,52,58,0.4)",
-                border:         "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              {/* Interactive action buttons — Client Component */}
-              <ProjectActions
-                liveUrl={project.liveUrl}
-                repoUrl={project.repoUrl}
-                title={project.title}
-              />
-
-              <hr style={{ borderColor: "rgba(255,255,255,0.08)" }} />
-
-              {/* Meta — static, no handlers needed */}
-              <dl className="space-y-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <Calendar
-                    className="w-4 h-4 flex-shrink-0"
-                    style={{ color: "var(--color-mint)" }}
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <dt className="sr-only">Year</dt>
-                    <dd style={{ color: "var(--color-ink-muted)" }}>{project.year}</dd>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Tag
-                    className="w-4 h-4 flex-shrink-0 mt-0.5"
-                    style={{ color: "var(--color-mint)" }}
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <dt className="sr-only">Technologies</dt>
-                    <dd>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs px-2.5 py-1 rounded-full"
-                            style={{
-                              background:  "rgba(184,216,199,0.1)",
-                              color:       "var(--color-mint)",
-                              border:      "1px solid rgba(184,216,199,0.2)",
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </dd>
-                  </div>
-                </div>
-              </dl>
-            </div>
-          </aside>
-
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

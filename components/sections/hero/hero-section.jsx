@@ -5,6 +5,8 @@ import { Download, ArrowRight } from "lucide-react";
 import { gsap, useGSAP } from "@/animations/gsap-config";
 import Preloader from "@/components/ui/preloader";
 import ScrollIndicator from "@/components/ui/scroll-indicator";
+import GradientOrb from "@/components/background/gradient-orb";
+import FloatingElements from "@/components/background/floating-elements";
 
 /** CV path — single source of truth */
 const CV_PATH = "/curriculumvitae/alif'sresume.pdf";
@@ -128,12 +130,12 @@ export default function HeroSection() {
         id="home"
         aria-label="Hero — Muhammad Alif Sya'bani, Creative Developer"
         style={{
-          position: "relative",
-          width:    "100vw",
-          height:   "100dvh",
-          overflow: "hidden",
-          margin:   0,
-          padding:  0,
+          position:  "relative",
+          width:     "100%",
+          minHeight: "100svh",
+          overflow:  "hidden",
+          margin:    0,
+          padding:   0,
         }}
       >
         {/* ── Video background ── */}
@@ -163,7 +165,7 @@ export default function HeroSection() {
           {/* Poster fallback if video can't load */}
         </video>
 
-        {/* ── Cinematic overlay ── */}
+        {/* ── Cinematic layered overlay (navbar contrast, center focal depth, bottom blend) ── */}
         <div
           ref={overlayRef}
           aria-hidden="true"
@@ -171,54 +173,95 @@ export default function HeroSection() {
             position:    "absolute",
             inset:       0,
             background:
-              "linear-gradient(to top, rgba(10,18,24,0.88) 0%, rgba(10,18,24,0.5) 35%, rgba(10,18,24,0.15) 60%, transparent 100%), " +
-              "linear-gradient(to right, rgba(10,18,24,0.4) 0%, rgba(10,18,24,0.08) 50%, transparent 100%), " +
-              "radial-gradient(ellipse at center, transparent 50%, rgba(5,10,15,0.5) 100%)",
+              /* 1. Subtle dark overlay at the top — ensures pristine navbar contrast */
+              "linear-gradient(to bottom, rgba(8, 16, 22, 0.65) 0%, rgba(8, 16, 22, 0.32) 16%, transparent 36%), " +
+              /* 2. Soft dark gradient behind the heading — crisp text readability without masking landscape */
+              "radial-gradient(ellipse 75% 55% at 50% 50%, rgba(10, 20, 28, 0.55) 0%, rgba(10, 20, 28, 0.20) 65%, transparent 100%), " +
+              /* 3. Subtle horizontal vignette for editorial focus */
+              "linear-gradient(to right, rgba(8, 16, 22, 0.35) 0%, transparent 25%, transparent 75%, rgba(8, 16, 22, 0.35) 100%), " +
+              /* 4. Stronger dark gradient near the bottom — seamless blend with next section */
+              "linear-gradient(to top, rgba(16, 29, 37, 0.98) 0%, rgba(16, 29, 37, 0.70) 20%, rgba(16, 29, 37, 0.20) 45%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
 
-        {/* ── Content ── */}
+        {/* ── Atmospheric depth layer ── */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{ zIndex: 5 }}
+        >
+          {/* Fog settling at the base for cinematic depth */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 50% at 50% 100%, rgba(11,21,29,0.6) 0%, transparent 60%)",
+            }}
+          />
+          <GradientOrb
+            color="rgba(35,81,90,0.45)"
+            size={560}
+            position={{ top: "12%", left: "8%" }}
+            opacity={0.4}
+            className="anim-drift"
+          />
+          <GradientOrb
+            color="rgba(168,217,237,0.18)"
+            size={480}
+            position={{ bottom: "8%", right: "10%" }}
+            opacity={0.35}
+            className="anim-float"
+          />
+          <FloatingElements count={7} color="rgba(184,216,199,0.5)" />
+        </div>
+
+        {/* ── Content (Properly offset from fixed navbar with responsive vertical centering) ── */}
         <div
           style={{
-            position:       "absolute",
-            inset:          0,
+            position:       "relative",
+            width:          "100%",
+            minHeight:      "100svh",
             display:        "flex",
             flexDirection:  "column",
             justifyContent: "center",
             alignItems:     "center",
             textAlign:      "center",
-            padding:        "clamp(1.5rem, 5vw, 4rem)",
+            paddingTop:     "clamp(120px, 16vh, 180px)",
+            paddingBottom:  "clamp(85px, 11vh, 125px)",
+            paddingLeft:    "clamp(1.25rem, 5vw, 3rem)",
+            paddingRight:   "clamp(1.25rem, 5vw, 3rem)",
             zIndex:         10,
           }}
         >
-          {/* Badge */}
-          <div ref={badgeRef} style={{ marginBottom: "clamp(0.8rem, 1.8vw, 1.4rem)" }}>
+          {/* Badge — completely clear of the floating navbar */}
+          <div ref={badgeRef} style={{ marginBottom: "clamp(1rem, 2vh, 1.5rem)" }}>
             <span
               role="text"
               style={{
-                display:         "inline-flex",
-                alignItems:      "center",
-                gap:             "0.5em",
-                padding:         "0.32em 0.95em",
-                borderRadius:    "9999px",
-                fontFamily:      "var(--font-mono)",
-                fontSize:        "clamp(0.62rem, 1vw, 0.72rem)",
-                fontWeight:      500,
-                letterSpacing:   "0.18em",
-                textTransform:   "uppercase",
-                color:           "var(--color-sky)",
-                background:      "rgba(168,217,237,0.1)",
-                border:          "1px solid rgba(168,217,237,0.24)",
-                backdropFilter:  "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
+                display:              "inline-flex",
+                alignItems:           "center",
+                gap:                  "0.5em",
+                padding:              "0.35em 1em",
+                borderRadius:         "9999px",
+                fontFamily:           "var(--font-mono)",
+                fontSize:             "clamp(0.65rem, 1vw, 0.75rem)",
+                fontWeight:           500,
+                letterSpacing:        "0.18em",
+                textTransform:        "uppercase",
+                color:                "var(--color-sky)",
+                background:           "rgba(10, 22, 30, 0.65)",
+                border:               "1px solid rgba(168, 217, 237, 0.28)",
+                boxShadow:            "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12)",
+                backdropFilter:       "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
               }}
             >
               <span
                 aria-hidden="true"
                 style={{
-                  width:        "5px",
-                  height:       "5px",
+                  width:        "6px",
+                  height:       "6px",
                   borderRadius: "50%",
                   background:   "var(--color-mint)",
                   flexShrink:   0,
@@ -229,18 +272,18 @@ export default function HeroSection() {
             </span>
           </div>
 
-          {/* Heading */}
+          {/* Heading — fluid clamp sizing, editorial line-height, zero clipping */}
           <h1
             ref={headingRef}
             style={{
               fontFamily:    "var(--font-display)",
               fontWeight:    700,
               letterSpacing: "-0.025em",
-              lineHeight:    1.06,
+              lineHeight:    1.12,
               color:         "#F5F7F5",
-              fontSize:      "clamp(2.2rem, 6vw, 5.5rem)",
-              maxWidth:      "16ch",
-              margin:        0,
+              fontSize:      "clamp(2.1rem, 5.5vw, 5.2rem)",
+              maxWidth:      "18ch",
+              margin:        "0 auto",
             }}
           >
             <span className="hero-line" style={{ display: "block" }}>
@@ -263,17 +306,19 @@ export default function HeroSection() {
             </span>
           </h1>
 
-          {/* Description */}
+          {/* Description — high contrast against layered mountain backdrop */}
           <p
             ref={descRef}
             style={{
-              fontFamily:  "var(--font-sans)",
-              fontSize:    "clamp(0.85rem, 1.5vw, 1.08rem)",
-              lineHeight:  1.65,
-              color:       "rgba(245,247,245,0.65)",
-              maxWidth:    "48ch",
-              marginTop:   "clamp(1rem, 2vw, 1.5rem)",
+              fontFamily:   "var(--font-sans)",
+              fontSize:     "clamp(0.92rem, 1.35vw, 1.12rem)",
+              lineHeight:   1.68,
+              color:        "rgba(245, 247, 245, 0.82)",
+              maxWidth:     "52ch",
+              marginTop:    "clamp(1.2rem, 2.2vh, 1.8rem)",
               marginBottom: 0,
+              marginLeft:   "auto",
+              marginRight:  "auto",
             }}
           >
             Combining technology, creativity, and meaningful ideas to create
@@ -287,8 +332,8 @@ export default function HeroSection() {
               display:        "flex",
               flexWrap:       "wrap",
               justifyContent: "center",
-              gap:            "clamp(0.65rem, 1.3vw, 0.95rem)",
-              marginTop:      "clamp(1.4rem, 2.8vw, 2.2rem)",
+              gap:            "clamp(0.75rem, 1.5vw, 1.25rem)",
+              marginTop:      "clamp(1.5rem, 3vh, 2.4rem)",
             }}
           >
             <CTAButton
@@ -357,36 +402,43 @@ function CTAButton({ href, primary = false, download, icon, children }) {
   };
 
   const variantStyle = primary
-    ? { background: "var(--color-mint)", color: "var(--color-canvas)" }
+    ? {
+        background: "var(--color-mint)",
+        color: "var(--color-canvas)",
+        boxShadow: "0 4px 16px rgba(184, 216, 199, 0.28)",
+      }
     : {
-        background:          "rgba(245,247,245,0.09)",
-        color:               "#F5F7F5",
-        border:              "1px solid rgba(245,247,245,0.2)",
-        backdropFilter:      "blur(14px)",
-        WebkitBackdropFilter:"blur(14px)",
+        background:           "rgba(245,247,245,0.09)",
+        color:                "#F5F7F5",
+        border:               "1px solid rgba(245,247,245,0.22)",
+        boxShadow:            "0 4px 16px rgba(0, 0, 0, 0.20)",
+        backdropFilter:       "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
       };
 
   return (
     <a
       href={href}
       download={download}
-      className="cta-item"
+      className="cta-item focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-mint)]"
       style={{ ...baseStyle, ...variantStyle }}
       onMouseEnter={(e) => {
         if (primary) {
           e.currentTarget.style.background = "var(--color-mint-light)";
+          e.currentTarget.style.boxShadow  = "0 6px 24px rgba(184, 216, 199, 0.40)";
         } else {
-          e.currentTarget.style.background   = "rgba(245,247,245,0.15)";
-          e.currentTarget.style.borderColor  = "rgba(245,247,245,0.32)";
+          e.currentTarget.style.background   = "rgba(245,247,245,0.16)";
+          e.currentTarget.style.borderColor  = "rgba(245,247,245,0.36)";
         }
         e.currentTarget.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={(e) => {
         if (primary) {
           e.currentTarget.style.background = "var(--color-mint)";
+          e.currentTarget.style.boxShadow  = "0 4px 16px rgba(184, 216, 199, 0.28)";
         } else {
           e.currentTarget.style.background   = "rgba(245,247,245,0.09)";
-          e.currentTarget.style.borderColor  = "rgba(245,247,245,0.2)";
+          e.currentTarget.style.borderColor  = "rgba(245,247,245,0.22)";
         }
         e.currentTarget.style.transform = "translateY(0)";
       }}

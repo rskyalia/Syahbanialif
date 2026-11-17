@@ -45,8 +45,9 @@ export default function Button({
   const variants = {
     primary:
       "bg-[var(--color-mint)] text-[var(--color-canvas)] font-semibold " +
-      "hover:bg-[var(--color-mint-light)] " +
-      "active:bg-[var(--color-mint-dim)] " +
+      "hover:bg-[var(--color-mint-light)] hover:shadow-mint hover:-translate-y-0.5 " +
+      "active:bg-[var(--color-mint-dim)] active:translate-y-0 " +
+      "focus-visible:outline-[var(--color-mint)] " +
       "shadow-sm ",
 
     secondary:

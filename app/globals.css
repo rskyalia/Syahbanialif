@@ -17,6 +17,8 @@
   --color-canvas:         #101D25;   /* Deep Navy — primary background */
   --color-canvas-mid:     #18343A;   /* Dark Teal — elevated surfaces */
   --color-canvas-high:    #1E3D45;   /* Slightly lifted surface */
+  --color-navy:           #0B151D;   /* Deep Navy — darkest base */
+  --color-ambient:        #23515A;   /* Ambient Teal — mid lighting */
 
 
   /* Typography */
@@ -227,9 +229,9 @@
     border-radius: var(--radius-sm);
   }
 
-  /* ── Scroll anchor offset ── */
+  /* ── Scroll anchor offset (accommodates fixed liquid glass navbar) ── */
   [id] {
-    scroll-margin-top: 5rem;
+    scroll-margin-top: clamp(6.5rem, 9vw, 8rem);
   }
 
   /* ── Headings — display font ── */
@@ -515,6 +517,181 @@
     background-size: 200px 200px;
     pointer-events: none;
     border-radius: inherit;
+  }
+}
+
+/* ============================================================
+   LIQUID GLASS NAVBAR — iOS 26 inspired
+   Floating pill navbar: translucent glass, layered depth, soft
+   rim light, ambient moving sheen and pointer-follow glow.
+   Scoped names (liquid-glass, lg-nav-*, liquid-glass-panel) —
+   no collisions with existing utilities.
+   ============================================================ */
+
+@layer utilities {
+
+  /* ── Base liquid-glass surface (darker liquid glass for optimal legibility) ──
+     Darker liquid glass surface providing crisp contrast against bright sky/video
+     while preserving the luminous, premium iOS-inspired glassy rim and refraction. */
+  .liquid-glass {
+    position: relative;
+    background: rgba(10, 22, 30, 0.76);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),   /* top rim highlight */
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);  /* bottom edge */
+    transition:
+      background 0.4s var(--ease-smooth),
+      backdrop-filter 0.4s var(--ease-smooth),
+      -webkit-backdrop-filter 0.4s var(--ease-smooth),
+      border-color 0.4s var(--ease-smooth),
+      box-shadow 0.4s var(--ease-smooth),
+      transform 0.4s var(--ease-smooth);
+  }
+
+  /* ── Scrolled state — slightly denser glass, stronger ambient shadow ── */
+  .liquid-glass.is-scrolled {
+    background: rgba(8, 18, 25, 0.88);
+    backdrop-filter: blur(32px) saturate(190%);
+    -webkit-backdrop-filter: blur(32px) saturate(190%);
+    border-color: rgba(255, 255, 255, 0.26);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.35),
+      0 2px 8px rgba(0, 0, 0, 0.20),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* ── Fallback: backdrop-filter unsupported → opaque, readable ── */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .liquid-glass {
+      background: rgba(10, 22, 30, 0.94);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .liquid-glass.is-scrolled {
+      background: rgba(8, 18, 25, 0.98);
+    }
+  }
+
+  /* ── Moving sheen — soft light sweep across the glass ── */
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.00) 38%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.00) 62%,
+      transparent 100%
+    );
+    background-size: 220% 100%;
+    background-position: 160% 0;
+    opacity: 0.7;
+    animation: lg-sheen 9s linear infinite;
+  }
+
+  @keyframes lg-sheen {
+    0%   { background-position: 160% 0; }
+    100% { background-position: -60% 0; }
+  }
+
+  /* ── Pointer-follow glow — radial highlight tracks the cursor ──
+     Position driven by --lg-mx / --lg-my set from JS (pointer). */
+  .liquid-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(
+      140px circle at var(--lg-mx, 50%) var(--lg-my, 40%),
+      rgba(255, 255, 255, 0.12),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-smooth);
+  }
+  .liquid-glass:hover::after { opacity: 1; }
+
+  /* ── Desktop nav links ── */
+  .lg-nav-link {
+    position: relative;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.95rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.88);
+    transition: color 0.25s var(--ease-smooth), background-color 0.25s var(--ease-smooth);
+  }
+  .lg-nav-link:hover {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  .lg-nav-link.is-active {
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  /* ── Active indicator — translucent mint glass pill with subtle inner border ── */
+  .lg-nav-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, rgba(184, 216, 199, 0.22) 0%, rgba(168, 217, 237, 0.16) 100%);
+    border: 1px solid rgba(184, 216, 199, 0.32);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.20);
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform, width;
+  }
+
+  /* ── Mobile panel liquid glass (bottom sheet) ── */
+  .liquid-glass-panel {
+    position: relative;
+    background: rgba(10, 22, 30, 0.92);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-bottom: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      0 -12px 48px rgba(0, 0, 0, 0.40);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .liquid-glass-panel {
+      background: rgba(10, 22, 30, 0.98);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
+  /* ── Reduced motion: stop the sheen & glow fade ──
+     (Global reduced-motion rule already neutralises transitions.) */
+  @media (prefers-reduced-motion: reduce) {
+    .liquid-glass::before {
+      animation: none;
+      opacity: 0;
+    }
+    .liquid-glass::after { transition: none; }
   }
 }
 
@@ -1048,4 +1225,49 @@ html {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(184,216,199,0.4);
+}
+
+/* ============================================================
+   IMMERSIVE BACKGROUND SYSTEM — ambient base & motion
+   ============================================================ */
+
+/* Base page atmosphere — applied to <body>. A continuous deep-navy → canvas
+   gradient with subtle teal/sky ambient lighting that shows through
+   transparent sections and at page edges. */
+.atmospheric-base {
+  background-color: var(--color-navy);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -5%, rgba(35, 81, 90, 0.30) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 105%, rgba(16, 52, 58, 0.26) 0%, transparent 52%),
+    radial-gradient(ellipse 60% 50% at 0% 80%, rgba(35, 81, 90, 0.18) 0%, transparent 50%),
+    linear-gradient(180deg, var(--color-navy) 0%, var(--color-canvas) 20%, var(--color-canvas) 80%, var(--color-navy) 100%);
+}
+
+/* Radial fade mask — softens decorative grids/patterns toward the edges so
+   they never read as a harsh full-bleed grid behind content. */
+.bg-fade-mask {
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 25%, transparent 78%);
+  mask-image:         radial-gradient(ellipse 80% 70% at 50% 45%, #000 25%, transparent 78%);
+}
+
+/* ── Ambient motion keyframes ── (transform-only → cheap, composited) */
+@keyframes orb-float    { 0%, 100% { transform: translateY(0); }            50% { transform: translateY(-18px); } }
+@keyframes orb-drift    { 0%       { transform: translate(0, 0); }          50% { transform: translate(14px, -12px); } 100% { transform: translate(0, 0); } }
+@keyframes spin-slow    { to       { transform: rotate(360deg); } }
+@keyframes pulse-soft   { 0%, 100% { opacity: 0.45; }                       50% { opacity: 0.8; } }
+@keyframes aurora-shift { 0%, 100% { transform: translate3d(-3%, 0, 0) scale(1); } 50% { transform: translate3d(3%, 0, 0) scale(1.05); } }
+
+.anim-float  { animation: orb-float    9s  ease-in-out infinite; }
+.anim-drift  { animation: orb-drift    15s ease-in-out infinite; }
+.anim-spin   { animation: spin-slow    70s linear        infinite; }
+.anim-pulse  { animation: pulse-soft   7s  ease-in-out infinite; }
+.anim-aurora { animation: aurora-shift  20s ease-in-out infinite; }
+
+/* Mobile: freeze decorative motion to save battery / avoid jank.
+   (Content readability & hierarchy are unaffected; elements stay visible.) */
+@media (max-width: 768px) {
+  .anim-float, .anim-drift, .anim-aurora, .anim-spin {
+    animation-duration: 0.001ms;
+    animation-iteration-count: 1;
+  }
 }
