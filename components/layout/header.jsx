@@ -313,7 +313,7 @@ export default function Header() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        inert={!isMobileOpen ? "true" : undefined}
+        {...(!isMobileOpen ? { inert: true } : {})}
         className={cn(
           "fixed inset-0 z-40 md:hidden flex flex-col",
           isMobileOpen ? "pointer-events-auto" : "pointer-events-none"

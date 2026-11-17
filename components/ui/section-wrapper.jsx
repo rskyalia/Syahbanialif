@@ -35,7 +35,7 @@ export default function SectionWrapper({
 }) {
   const bgStyles = {
     default:     "bg-canvas",
-    mid:         "bg-canvas-mid",
+    mid:         "bg-canvas",  // Ubah ke bg-canvas agar konsisten
     gradient:    "bg-gradient-section",
     transparent: "bg-transparent",
   };

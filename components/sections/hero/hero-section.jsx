@@ -109,16 +109,17 @@ export default function HeroSection() {
       },
     });
 
-    gsap.to(overlayRef.current, {
-      opacity: 0.6,
-      ease:    "none",
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start:   "30% top",
-        end:     "bottom top",
-        scrub:   2,
-      },
-    });
+    // Overlay tetap konsisten, tidak fade out
+    // gsap.to(overlayRef.current, {
+    //   opacity: 0.6,
+    //   ease:    "none",
+    //   scrollTrigger: {
+    //     trigger: sectionRef.current,
+    //     start:   "30% top",
+    //     end:     "bottom top",
+    //     scrub:   2,
+    //   },
+    // });
   }, { dependencies: [preloaderDone], scope: sectionRef });
 
   return (
@@ -165,7 +166,7 @@ export default function HeroSection() {
           {/* Poster fallback if video can't load */}
         </video>
 
-        {/* ── Cinematic layered overlay (navbar contrast, center focal depth, bottom blend) ── */}
+        {/* ── Cinematic layered overlay (tetap konsisten, tidak fade) ── */}
         <div
           ref={overlayRef}
           aria-hidden="true"
@@ -173,14 +174,14 @@ export default function HeroSection() {
             position:    "absolute",
             inset:       0,
             background:
-              /* 1. Subtle dark overlay at the top — ensures pristine navbar contrast */
-              "linear-gradient(to bottom, rgba(8, 16, 22, 0.65) 0%, rgba(8, 16, 22, 0.32) 16%, transparent 36%), " +
-              /* 2. Soft dark gradient behind the heading — crisp text readability without masking landscape */
-              "radial-gradient(ellipse 75% 55% at 50% 50%, rgba(10, 20, 28, 0.55) 0%, rgba(10, 20, 28, 0.20) 65%, transparent 100%), " +
-              /* 3. Subtle horizontal vignette for editorial focus */
-              "linear-gradient(to right, rgba(8, 16, 22, 0.35) 0%, transparent 25%, transparent 75%, rgba(8, 16, 22, 0.35) 100%), " +
-              /* 4. Stronger dark gradient near the bottom — seamless blend with next section */
-              "linear-gradient(to top, rgba(16, 29, 37, 0.98) 0%, rgba(16, 29, 37, 0.70) 20%, rgba(16, 29, 37, 0.20) 45%, transparent 70%)",
+              /* 1. Dark overlay di top untuk navbar contrast */
+              "linear-gradient(to bottom, rgba(8, 16, 22, 0.75) 0%, rgba(8, 16, 22, 0.45) 16%, transparent 36%), " +
+              /* 2. Central dark gradient untuk text readability */
+              "radial-gradient(ellipse 75% 55% at 50% 50%, rgba(10, 20, 28, 0.65) 0%, rgba(10, 20, 28, 0.35) 65%, transparent 100%), " +
+              /* 3. Horizontal vignette */
+              "linear-gradient(to right, rgba(8, 16, 22, 0.40) 0%, transparent 25%, transparent 75%, rgba(8, 16, 22, 0.40) 100%), " +
+              /* 4. Strong bottom gradient untuk seamless blend dengan section berikutnya */
+              "linear-gradient(to top, var(--color-canvas) 0%, rgba(16, 29, 37, 0.90) 15%, rgba(16, 29, 37, 0.50) 35%, transparent 65%)",
             pointerEvents: "none",
           }}
         />

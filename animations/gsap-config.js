@@ -10,7 +10,7 @@ import { useGSAP }       from "@gsap/react";
  * Only register in browser environment to ensure clean SSR evaluation.
  */
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger, TextPlugin, useGSAP);
+  gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
   /** Global GSAP defaults — used consistently across all animations */
   gsap.defaults({

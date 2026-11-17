@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "@/animations/gsap-config";
+import { gsap, useGSAP, ScrollTrigger } from "@/animations/gsap-config";
 import { useMediaQuery } from "@/hooks";
 import { cn } from "@/lib/utils";
 import GradientOrb from "./gradient-orb";
@@ -227,7 +227,7 @@ export default function SectionBackground({ variant = "about", className }) {
         },
       });
     },
-    { dependencies: [v.parallax, isMobile], scope: orbsRef }
+    { scope: orbsRef }
   );
 
   const orbs = v.orbs.map((o, i) => (
@@ -262,14 +262,14 @@ export default function SectionBackground({ variant = "about", className }) {
       {/* ambient floating particles */}
       <FloatingElements count={floatCount} color={v.floating.color} />
 
-      {/* subtle boundary fades — smooth transitions between sections */}
+      {/* Enhanced boundary fades untuk transisi yang lebih smooth */}
       <div
-        className="absolute inset-x-0 top-0 h-16"
-        style={{ background: "linear-gradient(to bottom, rgba(11,21,29,0.35), transparent)" }}
+        className="absolute inset-x-0 top-0 h-32"
+        style={{ background: "linear-gradient(to bottom, var(--color-canvas) 0%, rgba(16,29,37,0.6) 40%, transparent 100%)" }}
       />
       <div
-        className="absolute inset-x-0 bottom-0 h-16"
-        style={{ background: "linear-gradient(to top, rgba(11,21,29,0.35), transparent)" }}
+        className="absolute inset-x-0 bottom-0 h-32"
+        style={{ background: "linear-gradient(to top, var(--color-canvas) 0%, rgba(16,29,37,0.6) 40%, transparent 100%)" }}
       />
     </div>
   );
